@@ -1,0 +1,10 @@
+[
+  {
+    "class":"firrtl.annotations.LoadMemoryAnnotation",
+    "target":"Tile.InstCache.cache",
+    "fileName":"initmem/instcache.txt",
+    "hexOrBinary":{
+      "name":"h"
+    }
+  }
+]
