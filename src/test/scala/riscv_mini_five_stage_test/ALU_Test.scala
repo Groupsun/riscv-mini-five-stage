@@ -16,7 +16,7 @@ class ALU_Test(c: ALU) extends PeekPokeTester(c) {
     poke(c.io.Src_B, src_b)
     poke(c.io.ALUOp, aluop)
     peek(c.io.Sum)
-    peek(c.io.Zero)
+    peek(c.io.Conflag)
     step(1)
     aluop = aluop + 1
   }

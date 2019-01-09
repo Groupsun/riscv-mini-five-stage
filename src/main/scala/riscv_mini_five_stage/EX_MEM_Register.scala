@@ -13,7 +13,7 @@ import chisel3._
 class EX_MEM_Registerio extends Bundle with Config {
   val ex_branch_addr  = Input(UInt(WLEN.W))
   val ex_alu_sum      = Input(UInt(WLEN.W))
-  val ex_alu_zero     = Input(UInt(WLEN.W))
+  val ex_alu_conflag  = Input(UInt(CONFLAG_SIGLEN.W))
   val ex_rs2_out      = Input(UInt(WLEN.W))
   val ex_rd           = Input(UInt(REG_LEN.W))
 
@@ -40,7 +40,7 @@ class EX_MEM_Registerio extends Bundle with Config {
   val mem_Mem_to_Reg  = Output(UInt(REG_SRC_SIG_LEN.W))
 
   val mem_branch_addr = Output(UInt(WLEN.W))
-  val mem_alu_zero    = Output(UInt(ZERO_SIG_LEN.W))
+  val mem_alu_conflag = Output(UInt(CONFLAG_SIGLEN.W))
   val mem_alu_sum     = Output(UInt(WLEN.W))
   val mem_rs2_out     = Output(UInt(WLEN.W))
   val mem_rd          = Output(UInt(REG_LEN.W))
@@ -52,7 +52,7 @@ class EX_MEM_Register extends Module with Config {
   // Reg for storing the signal and data
   val branch_addr   = RegInit(0.U(WLEN.W))
   val alu_sum       = RegInit(0.U(WLEN.W))
-  val alu_zero      = RegInit(0.U(REG_LEN.W))
+  val alu_conflag   = RegInit(0.U(CONFLAG_SIGLEN.W))
   val rs2_out       = RegInit(0.U(WLEN.W))
   val rd            = RegInit(0.U(REG_LEN.W))
 
@@ -67,7 +67,7 @@ class EX_MEM_Register extends Module with Config {
   // apply regs
   branch_addr   := io.ex_branch_addr
   alu_sum       := io.ex_alu_sum
-  alu_zero      := io.ex_alu_zero
+  alu_conflag   := io.ex_alu_conflag
   rs2_out       := io.ex_rs2_out
   rd            := io.ex_rd
   branch        := io.ex_Branch
@@ -81,7 +81,7 @@ class EX_MEM_Register extends Module with Config {
   // output
   io.mem_branch_addr  := branch_addr
   io.mem_alu_sum      := alu_sum
-  io.mem_alu_zero     := alu_zero
+  io.mem_alu_conflag  := alu_conflag
   io.mem_rs2_out      := rs2_out
   io.mem_rd           := rd
   io.mem_Branch       := branch

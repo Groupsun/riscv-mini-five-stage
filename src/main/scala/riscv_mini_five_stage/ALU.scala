@@ -18,25 +18,31 @@ import ALU._
 object ALU {
   // ALUOp
   // May expend in future time
-  val ALU_ADD     = 0.U(4.W)
-  val ALU_SUB     = 1.U(4.W)
-  val ALU_AND     = 2.U(4.W)
-  val ALU_OR      = 3.U(4.W)
-  val ALU_XOR     = 4.U(4.W)
-  val ALU_SLL     = 5.U(4.W)
-  val ALU_SRL     = 6.U(4.W)
-  val ALU_SRA     = 7.U(4.W)
-  val ALU_SLT     = 8.U(4.W)
-  val ALU_SLTU    = 9.U(4.W)
-  val ALU_OP_XXX  = 15.U(4.W)
+  val ALU_ADD     = 0.U(5.W)
+  val ALU_SUB     = 1.U(5.W)
+  val ALU_AND     = 2.U(5.W)
+  val ALU_OR      = 3.U(5.W)
+  val ALU_XOR     = 4.U(5.W)
+  val ALU_SLL     = 5.U(5.W)
+  val ALU_SRL     = 6.U(5.W)
+  val ALU_SRA     = 7.U(5.W)
+  val ALU_SLT     = 8.U(5.W)
+  val ALU_SLTU    = 9.U(5.W)
+  val ALU_BEQ     = 10.U(5.W)
+  val ALU_BNE     = 11.U(5.W)
+  val ALU_BLT     = 12.U(5.W)
+  val ALU_BGE     = 13.U(5.W)
+  val ALU_BLTU    = 14.U(5.W)
+  val ALU_BGEU    = 15.U(5.W)
+  val ALU_OP_XXX  = 16.U(5.W)
 }
 
 class ALUio extends Bundle with Config {
-  val Src_A = Input(UInt(WLEN.W))
-  val Src_B = Input(UInt(WLEN.W))
-  val ALUOp = Input(UInt(ALUOP_SIG_LEN.W))
-  val Sum   = Output(UInt(WLEN.W))
-  val Zero  = Output(UInt(ZERO_SIG_LEN.W))
+  val Src_A     = Input(UInt(WLEN.W))
+  val Src_B     = Input(UInt(WLEN.W))
+  val ALUOp     = Input(UInt(ALUOP_SIG_LEN.W))
+  val Sum       = Output(UInt(WLEN.W))
+  val Conflag   = Output(UInt(CONFLAG_SIGLEN.W))
 }
 
 class ALU extends Module with Config {
@@ -56,7 +62,14 @@ class ALU extends Module with Config {
     ALU_SLTU  -> (io.Src_A < io.Src_B)
   ))
 
-  io.Zero := Mux((io.Src_A === io.Src_B), 1.U, 0.U)
+  io.Conflag := MuxLookup(io.ALUOp, 0.U, Seq(
+    ALU_BEQ   -> (io.Src_A.asSInt() === io.Src_B.asSInt()),
+    ALU_BNE   -> (io.Src_A.asSInt() =/= io.Src_B.asSInt()),
+    ALU_BLT   -> (io.Src_A.asSInt() <   io.Src_B.asSInt()),
+    ALU_BGE   -> (io.Src_A.asSInt() >=  io.Src_B.asSInt()),
+    ALU_BLTU  -> (io.Src_A <  io.Src_B),
+    ALU_BGEU  -> (io.Src_A >= io.Src_B)
+  ))
 }
 
 object ALU_generate extends App {

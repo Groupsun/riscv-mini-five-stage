@@ -31,7 +31,7 @@ class Tile extends Module with Config {
     val ex_rs1_out        = Output(UInt(WLEN.W))
     val ex_rs2_out        = Output(UInt(WLEN.W))
     val ex_alu_sum        = Output(UInt(WLEN.W))
-    val ex_alu_zero       = Output(UInt(ZERO_SIG_LEN.W))
+    val ex_alu_conflag    = Output(UInt(CONFLAG_SIGLEN.W))
     val ex_branch_addr    = Output(UInt(WLEN.W))
     val ex_rd             = Output(UInt(REG_LEN.W))
     val mem_rd            = Output(UInt(REG_LEN.W))
@@ -69,7 +69,7 @@ class Tile extends Module with Config {
   instcache.io.addr := pc.io.pc_out
 
   //monitor -------------------------
-  io.if_pc_out := pc.io.addr_input
+  io.if_pc_out  := pc.io.pc_out
   io.if_next_pc := datapath.io.if_datapathio.if_new_pc
   //monitor -------------------------
 
@@ -95,8 +95,8 @@ class Tile extends Module with Config {
   immgen.io.imm_sel   := control.io.Imm_Sel
 
   //monitor -------------------------
-  io.id_rs1 := if_id_register.io.id_rs1
-  io.id_rs2 := if_id_register.io.id_rs2
+  io.id_rs1     := if_id_register.io.id_rs1
+  io.id_rs2     := if_id_register.io.id_rs2
   io.id_rs1_out := regfile.io.rs1_out
   io.id_rs2_out := regfile.io.rs2_out
   //monitor -------------------------
@@ -137,18 +137,18 @@ class Tile extends Module with Config {
   alu.io.ALUOp := id_ex_register.io.ex_ALUOp
 
   //monitor -------------------------
-  io.ex_rs1_out := id_ex_register.io.ex_rs1_out
-  io.ex_rs2_out := id_ex_register.io.ex_rs2_out
-  io.ex_alu_sum := alu.io.Sum
-  io.ex_alu_zero := alu.io.Zero
+  io.ex_rs1_out     := id_ex_register.io.ex_rs1_out
+  io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
+  io.ex_alu_sum     := alu.io.Sum
+  io.ex_alu_conflag := alu.io.Conflag
   io.ex_branch_addr := datapath.io.ex_datapathio.ex_branch_addr
-  io.ex_rd := id_ex_register.io.ex_rd
+  io.ex_rd          := id_ex_register.io.ex_rd
   //monitor -------------------------
 
   /* EX/MEM pipeline register */
   ex_mem_register.io.ex_branch_addr := datapath.io.ex_datapathio.ex_branch_addr
   ex_mem_register.io.ex_alu_sum     := alu.io.Sum
-  ex_mem_register.io.ex_alu_zero    := alu.io.Zero
+  ex_mem_register.io.ex_alu_conflag := alu.io.Conflag
   ex_mem_register.io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
   ex_mem_register.io.ex_rd          := id_ex_register.io.ex_rd
   ex_mem_register.io.ex_Branch      := id_ex_register.io.ex_Branch
@@ -169,31 +169,31 @@ class Tile extends Module with Config {
   datacache.io.Load_Type  := ex_mem_register.io.mem_Load_Type
 
   // generate PC_Src signal
-  datapath.io.mem_datapathio.mem_Branch := ex_mem_register.io.mem_Branch
-  datapath.io.mem_datapathio.mem_Zero   := ex_mem_register.io.mem_alu_zero
+  datapath.io.mem_datapathio.mem_Branch     := ex_mem_register.io.mem_Branch
+  datapath.io.mem_datapathio.mem_Conflag    := ex_mem_register.io.mem_alu_conflag
 
   //monitor -------------------------
-  io.mem_rd := ex_mem_register.io.mem_rd
-  io.mem_branch_addr := ex_mem_register.io.mem_branch_addr
-  io.mem_alu_sum := ex_mem_register.io.mem_alu_sum
-  io.mem_writedata := ex_mem_register.io.mem_rs2_out
-  io.mem_dataout := datacache.io.data_out
+  io.mem_rd           := ex_mem_register.io.mem_rd
+  io.mem_branch_addr  := ex_mem_register.io.mem_branch_addr
+  io.mem_alu_sum      := ex_mem_register.io.mem_alu_sum
+  io.mem_writedata    := ex_mem_register.io.mem_rs2_out
+  io.mem_dataout      := datacache.io.data_out
   //monitor -------------------------
 
   /* MEM/WB pipeline register */
-  mem_wb_register.io.mem_Reg_Write := ex_mem_register.io.mem_Reg_Write
+  mem_wb_register.io.mem_Reg_Write  := ex_mem_register.io.mem_Reg_Write
   mem_wb_register.io.mem_Mem_to_Reg := ex_mem_register.io.mem_Mem_to_Reg
-  mem_wb_register.io.mem_dataout := datacache.io.data_out
-  mem_wb_register.io.mem_alu_sum := ex_mem_register.io.mem_alu_sum
-  mem_wb_register.io.mem_rd      := ex_mem_register.io.mem_rd
+  mem_wb_register.io.mem_dataout    := datacache.io.data_out
+  mem_wb_register.io.mem_alu_sum    := ex_mem_register.io.mem_alu_sum
+  mem_wb_register.io.mem_rd         := ex_mem_register.io.mem_rd
 
   /* WB stage */
-  datapath.io.wb_datapathio.wb_alu_sum := mem_wb_register.io.wb_alu_sum
-  datapath.io.wb_datapathio.wb_dataout := mem_wb_register.io.wb_dataout
+  datapath.io.wb_datapathio.wb_alu_sum    := mem_wb_register.io.wb_alu_sum
+  datapath.io.wb_datapathio.wb_dataout    := mem_wb_register.io.wb_dataout
   datapath.io.wb_datapathio.wb_Mem_to_Reg := mem_wb_register.io.wb_Mem_to_Reg
 
   //monitor -------------------------
-  io.wb_rd := mem_wb_register.io.wb_rd
+  io.wb_rd            := mem_wb_register.io.wb_rd
   io.wb_registerwrite := datapath.io.wb_datapathio.wb_reg_writedata
   //monitor -------------------------
 

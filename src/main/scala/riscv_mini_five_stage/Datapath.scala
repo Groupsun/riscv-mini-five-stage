@@ -29,7 +29,7 @@ class EX_datapathio extends Bundle with Config {
 
 class MEM_datapathio extends Bundle with Config {
   val mem_Branch = Input(UInt(BRANCH_SIG_LEN.W))
-  val mem_Zero = Input(UInt(ZERO_SIG_LEN.W))
+  val mem_Conflag = Input(UInt(CONFLAG_SIGLEN.W))
 }
 
 class WB_datapathio extends Bundle with Config {
@@ -54,7 +54,7 @@ class Datapath extends Module with Config {
   val PC_4 = io.if_datapathio.if_pc + 4.U
 
   // generate next PC
-  val PC_Src = io.mem_datapathio.mem_Zero & io.mem_datapathio.mem_Branch
+  val PC_Src = io.mem_datapathio.mem_Conflag & io.mem_datapathio.mem_Branch
   io.if_datapathio.if_new_pc := Mux(PC_Src.toBool(), io.if_datapathio.if_pc_branch_addr, PC_4)
 
   /* EX stage */

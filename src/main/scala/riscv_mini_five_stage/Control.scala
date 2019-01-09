@@ -103,7 +103,13 @@ object Control{
     SH       -> List(Reg_Write_False,   IMM_S ,   ALU_B_imm,   ALU_ADD   ,   Branch_False,   Mem_Read_False,   Mem_Write_True ,   Data_Size_H,   Load_XXX     ,   RegWrite_XXX),
     SB       -> List(Reg_Write_False,   IMM_S ,   ALU_B_imm,   ALU_ADD   ,   Branch_False,   Mem_Read_False,   Mem_Write_True ,   Data_Size_B,   Load_XXX     ,   RegWrite_XXX),
 
-    BEQ      -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_SUB   ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX),
+    BEQ      -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_BEQ   ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX),
+    BNE      -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_BNE   ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX),
+    BLT      -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_BLT   ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX),
+    BGE      -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_BGE   ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX),
+    BLTU     -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_BLTU  ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX),
+    BGEU     -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_BGEU  ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX),
+
     NOP      -> List(Reg_Write_False,   IMM_X ,   ALU_B_XXX,   ALU_OP_XXX,   Branch_False,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX)
   )
 }
