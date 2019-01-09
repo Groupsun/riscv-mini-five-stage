@@ -20,6 +20,10 @@ object ALU {
   val ALU_SUB     = 1.U(4.W)
   val ALU_AND     = 2.U(4.W)
   val ALU_OR      = 3.U(4.W)
+  val ALU_XOR     = 4.U(4.W)
+  val ALU_SLL     = 5.U(4.W)
+  val ALU_SRL     = 6.U(4.W)
+  val ALU_SRA     = 7.U(4.W)
   val ALU_OP_XXX  = 15.U(4.W)
 }
 
@@ -34,11 +38,16 @@ class ALUio extends Bundle with Config {
 class ALU extends Module with Config {
   val io = IO(new ALUio)
 
+  val shamt = io.Src_B(5, 0)
   io.Sum := MuxLookup(io.ALUOp, io.Src_B, Seq(
     ALU_ADD -> (io.Src_A + io.Src_B),
     ALU_SUB -> (io.Src_A - io.Src_B),
     ALU_AND -> (io.Src_A & io.Src_B),
-    ALU_OR  -> (io.Src_A | io.Src_B)
+    ALU_OR  -> (io.Src_A | io.Src_B),
+    ALU_XOR -> (io.Src_A ^ shamt),
+    ALU_SLL -> (io.Src_A << shamt),
+    ALU_SRL -> (io.Src_A >> shamt),
+    ALU_SRA -> (io.Src_A.asSInt() >> shamt).asUInt()
   ))
 
   io.Zero := Mux((io.Src_A === io.Src_B), 1.U, 0.U)

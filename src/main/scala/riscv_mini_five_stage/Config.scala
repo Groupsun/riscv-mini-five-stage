@@ -35,4 +35,6 @@ trait Config {
   val REG_SRC_SIG_LEN     = 1
   val ZERO_SIG_LEN        = 1
   val PC_SRC_SIG_LEN      = 1
+  val FORWARD_A_SIG_LEN   = 2
+  val FORWARD_B_SIG_LEN   = 2
 }

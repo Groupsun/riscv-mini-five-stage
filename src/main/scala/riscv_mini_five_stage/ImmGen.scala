@@ -22,12 +22,20 @@ class ImmGenio extends Bundle with Config {
 class ImmGen extends Module with Config {
   val io = IO(new ImmGenio)
 
-  val Rimm = 0.U(WLEN.W)
-  val Iimm = io.inst_in(31, 20)
-  val Simm = Cat(io.inst_in(31, 25), io.inst_in(11, 7))
-  val Bimm = Cat(io.inst_in(31), io.inst_in(7), io.inst_in(30, 25), io.inst_in(11, 8))
+  val Rimm  = 0.U(WLEN.W).asSInt()
+  val Iimm  = io.inst_in(31, 20).asSInt()
+  val Simm  = Cat(io.inst_in(31, 25), io.inst_in(11, 7)).asSInt()
+  val SBimm = Cat(io.inst_in(31), io.inst_in(7), io.inst_in(30, 25), io.inst_in(11, 8), 0.U(1.W)).asSInt()
+  val Uimm  = Cat(io.inst_in(31, 12), 0.U(12.W)).asSInt()
+  val UJimm = Cat(io.inst_in(31), io.inst_in(19, 12), io.inst_in(20), io.inst_in(30, 21), 0.U(12.W)).asSInt()
 
-  io.imm := MuxLookup(io.imm_sel, 0.U, Seq(IMM_R -> Iimm, IMM_I -> Iimm, IMM_S -> Simm, IMM_B -> Bimm))
+  io.imm := MuxLookup(io.imm_sel, 0.S, Seq(
+    IMM_R   -> Rimm,
+    IMM_I   -> Iimm,
+    IMM_S   -> Simm,
+    IMM_SB  -> SBimm,
+    IMM_U   -> Uimm,
+    IMM_UJ  -> UJimm)).asUInt()
 }
 
 object ImmGen extends App {

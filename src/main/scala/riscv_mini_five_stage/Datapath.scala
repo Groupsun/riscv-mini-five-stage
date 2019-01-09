@@ -59,8 +59,7 @@ class Datapath extends Module with Config {
 
   /* EX stage */
   // calculate branch address
-  val shift_imm = io.ex_datapathio.ex_imm << 1.U
-  io.ex_datapathio.ex_branch_addr := io.ex_datapathio.ex_pc + shift_imm.asUInt()
+  io.ex_datapathio.ex_branch_addr := io.ex_datapathio.ex_pc + io.ex_datapathio.ex_imm.asUInt()
 
   // select ALU oprand B source
   io.ex_datapathio.alu_b_src := Mux(io.ex_datapathio.ex_ALU_Src.toBool(),

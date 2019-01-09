@@ -22,11 +22,13 @@ object Control{
 
   // Imm_sel
   // May expend in future time
-  val IMM_X = 0.U(3.W)
-  val IMM_R = 1.U(3.W)
-  val IMM_I = 2.U(3.W)
-  val IMM_S = 3.U(3.W)
-  val IMM_B = 4.U(3.W)
+  val IMM_X   = 0.U(3.W)
+  val IMM_R   = 1.U(3.W)
+  val IMM_I   = 2.U(3.W)
+  val IMM_S   = 3.U(3.W)
+  val IMM_SB  = 4.U(3.W)
+  val IMM_U   = 5.U(3.W)
+  val IMM_UJ  = 6.U(3.W)
 
   // ALU_Src
   val ALU_B_XXX = 0.U(1.W)
@@ -51,18 +53,33 @@ object Control{
   val RegWrite_Mem = 1.U(1.W)
 
 //                      Reg_Write      Imm_sel     ALU_Src       ALUOp         Branch           Mem_Read          Mem_Write        Mem_to_Reg
-//                         |              |          |             |             |                 |                 |                 |
-  val default = List(Reg_Write_False,   IMM_X,   ALU_B_XXX,   ALU_OP_XXX,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_XXX)
+//                         |              |           |            |              |                |                 |                 |
+  val default = List(Reg_Write_False,   IMM_X ,   ALU_B_XXX,   ALU_OP_XXX,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_XXX)
 
   val map =    Array(
-    ADD      -> List(Reg_Write_True ,   IMM_R,   ALU_B_rs2,   ALU_ADD   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
-    SUB      -> List(Reg_Write_True ,   IMM_R,   ALU_B_rs2,   ALU_SUB   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
-    AND      -> List(Reg_Write_True ,   IMM_R,   ALU_B_rs2,   ALU_AND   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
-    OR       -> List(Reg_Write_True ,   IMM_R,   ALU_B_rs2,   ALU_OR    ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
-    LW       -> List(Reg_Write_True ,   IMM_I,   ALU_B_imm,   ALU_ADD   ,   Branch_False,   Mem_Read_True ,   Mem_Write_False,   RegWrite_Mem),
-    SW       -> List(Reg_Write_False,   IMM_S,   ALU_B_imm,   ALU_ADD   ,   Branch_False,   Mem_Read_False,   Mem_Write_True ,   RegWrite_XXX),
-    BEQ      -> List(Reg_Write_False,   IMM_B,   ALU_B_rs2,   ALU_SUB   ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   RegWrite_XXX),
-    NOP      -> List(Reg_Write_False,   IMM_X,   ALU_B_XXX,   ALU_OP_XXX,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_XXX)
+    ADD      -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_ADD   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    SUB      -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_SUB   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    AND      -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_AND   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    OR       -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_OR    ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    XOR      -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_XOR   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+
+    ADDI     -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_ADD   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    ANDI     -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_AND   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    ORI      -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_OR    ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    XORI     -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_XOR   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+
+    SLL      -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_SLL   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    SRL      -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_SRL   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    SRA      -> List(Reg_Write_True ,   IMM_R ,   ALU_B_rs2,   ALU_SRA   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+
+    SLLI     -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_SLL   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    SRLI     -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_SRL   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+    SRAI     -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_SRA   ,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_ALU),
+
+    LW       -> List(Reg_Write_True ,   IMM_I ,   ALU_B_imm,   ALU_ADD   ,   Branch_False,   Mem_Read_True ,   Mem_Write_False,   RegWrite_Mem),
+    SW       -> List(Reg_Write_False,   IMM_S ,   ALU_B_imm,   ALU_ADD   ,   Branch_False,   Mem_Read_False,   Mem_Write_True ,   RegWrite_XXX),
+    BEQ      -> List(Reg_Write_False,   IMM_SB,   ALU_B_rs2,   ALU_SUB   ,   Branch_True ,   Mem_Read_False,   Mem_Write_False,   RegWrite_XXX),
+    NOP      -> List(Reg_Write_False,   IMM_X ,   ALU_B_XXX,   ALU_OP_XXX,   Branch_False,   Mem_Read_False,   Mem_Write_False,   RegWrite_XXX)
   )
 }
 

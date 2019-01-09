@@ -7,7 +7,7 @@ import chisel3.util
 import org.scalatest.{FlatSpec, Matchers}
 
 class Tile_Test(c: Tile) extends PeekPokeTester(c) {
-  for(i <- 0 to 10) {
+  for(i <- 0 to 20) {
     // Input
     poke(c.io.pc_write, 1)
     poke(c.io.if_flush, 0)
