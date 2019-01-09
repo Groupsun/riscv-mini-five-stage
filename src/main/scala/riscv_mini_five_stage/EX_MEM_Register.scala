@@ -22,6 +22,8 @@ class EX_MEM_Registerio extends Bundle with Config {
   val ex_Branch       = Input(UInt(BRANCH_SIG_LEN.W))
   val ex_Mem_Read     = Input(UInt(MEM_READ_SIG_LEN.W))
   val ex_Mem_Write    = Input(UInt(MEM_WRITE_SIG_LEN.W))
+  val ex_Data_Size    = Input(UInt(DATA_SIZE_SIG_LEN.W))
+  val ex_Load_Type    = Input(UInt(LOAD_TYPE_SIG_LEN.W))
 
   // WB stage
   val ex_Reg_Write    = Input(UInt(REGWRITE_SIG_LEN.W))
@@ -32,6 +34,8 @@ class EX_MEM_Registerio extends Bundle with Config {
   val mem_Branch      = Output(UInt(BRANCH_SIG_LEN.W))
   val mem_Mem_Read    = Output(UInt(MEM_READ_SIG_LEN.W))
   val mem_Mem_Write   = Output(UInt(MEM_WRITE_SIG_LEN.W))
+  val mem_Data_Size   = Output(UInt(DATA_SIZE_SIG_LEN.W))
+  val mem_Load_Type   = Output(UInt(LOAD_TYPE_SIG_LEN.W))
   val mem_Reg_Write   = Output(UInt(REGWRITE_SIG_LEN.W))
   val mem_Mem_to_Reg  = Output(UInt(REG_SRC_SIG_LEN.W))
 
@@ -55,6 +59,8 @@ class EX_MEM_Register extends Module with Config {
   val branch        = RegInit(0.U(BRANCH_SIG_LEN.W))
   val mem_read      = RegInit(0.U(MEM_READ_SIG_LEN.W))
   val mem_write     = RegInit(0.U(MEM_WRITE_SIG_LEN.W))
+  val data_size     = RegInit(0.U(DATA_SIZE_SIG_LEN.W))
+  val load_type     = RegInit(0.U(LOAD_TYPE_SIG_LEN.W))
   val reg_write     = RegInit(0.U(REGWRITE_SIG_LEN.W))
   val mem_to_reg    = RegInit(0.U(REG_SRC_SIG_LEN.W))
 
@@ -67,6 +73,8 @@ class EX_MEM_Register extends Module with Config {
   branch        := io.ex_Branch
   mem_read      := io.ex_Mem_Read
   mem_write     := io.ex_Mem_Write
+  data_size     := io.ex_Data_Size
+  load_type     := io.ex_Load_Type
   reg_write     := io.ex_Reg_Write
   mem_to_reg    := io.ex_Mem_to_Reg
 
@@ -79,6 +87,8 @@ class EX_MEM_Register extends Module with Config {
   io.mem_Branch       := branch
   io.mem_Mem_Read     := mem_read
   io.mem_Mem_Write    := mem_write
+  io.mem_Data_Size    := data_size
+  io.mem_Load_Type    := load_type
   io.mem_Reg_Write    := reg_write
   io.mem_Mem_to_Reg   := mem_to_reg
 }

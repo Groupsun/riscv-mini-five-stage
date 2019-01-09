@@ -6,6 +6,7 @@
 * Arithmatic and logic unit of processor
 * 05-01-2019 - implemented 4 basic oprations (ADD, SUB, AND, OR)
 * 08-01-2019 - add operations, now supported mostly ALU functions
+* 09-01-2019 - add register set instructions
 * */
 
 package riscv_mini_five_stage
@@ -25,6 +26,8 @@ object ALU {
   val ALU_SLL     = 5.U(4.W)
   val ALU_SRL     = 6.U(4.W)
   val ALU_SRA     = 7.U(4.W)
+  val ALU_SLT     = 8.U(4.W)
+  val ALU_SLTU    = 9.U(4.W)
   val ALU_OP_XXX  = 15.U(4.W)
 }
 
@@ -41,14 +44,16 @@ class ALU extends Module with Config {
 
   val shamt = io.Src_B(5, 0)
   io.Sum := MuxLookup(io.ALUOp, io.Src_B, Seq(
-    ALU_ADD -> (io.Src_A + io.Src_B),
-    ALU_SUB -> (io.Src_A - io.Src_B),
-    ALU_AND -> (io.Src_A & io.Src_B),
-    ALU_OR  -> (io.Src_A | io.Src_B),
-    ALU_XOR -> (io.Src_A ^ shamt),
-    ALU_SLL -> (io.Src_A << shamt),
-    ALU_SRL -> (io.Src_A >> shamt),
-    ALU_SRA -> (io.Src_A.asSInt() >> shamt).asUInt()
+    ALU_ADD   -> (io.Src_A + io.Src_B),
+    ALU_SUB   -> (io.Src_A - io.Src_B),
+    ALU_AND   -> (io.Src_A & io.Src_B),
+    ALU_OR    -> (io.Src_A | io.Src_B),
+    ALU_XOR   -> (io.Src_A ^ shamt),
+    ALU_SLL   -> (io.Src_A << shamt),
+    ALU_SRL   -> (io.Src_A >> shamt),
+    ALU_SRA   -> (io.Src_A.asSInt() >> shamt).asUInt(),
+    ALU_SLT   -> (io.Src_A.asSInt() < io.Src_B.asSInt()),
+    ALU_SLTU  -> (io.Src_A < io.Src_B)
   ))
 
   io.Zero := Mux((io.Src_A === io.Src_B), 1.U, 0.U)

@@ -14,6 +14,7 @@ import chisel3._
 trait Config {
   // global config parameters
   val BLEN           = 8
+  val HLEN           = 16
   val WLEN           = 32
   val INST_CACHE_LEN = 128
   val REG_LEN        = 5
@@ -37,4 +38,6 @@ trait Config {
   val PC_SRC_SIG_LEN      = 1
   val FORWARD_A_SIG_LEN   = 2
   val FORWARD_B_SIG_LEN   = 2
+  val DATA_SIZE_SIG_LEN   = 2
+  val LOAD_TYPE_SIG_LEN   = 1
 }

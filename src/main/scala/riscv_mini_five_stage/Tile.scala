@@ -108,6 +108,8 @@ class Tile extends Module with Config {
   id_ex_register.io.Branch      := control.io.Branch
   id_ex_register.io.Mem_Read    := control.io.Mem_Read
   id_ex_register.io.Mem_Write   := control.io.Mem_Write
+  id_ex_register.io.Data_Size   := control.io.Data_Size
+  id_ex_register.io.Load_Type   := control.io.Load_Type
   id_ex_register.io.Reg_Write   := control.io.Reg_Write
   id_ex_register.io.Mem_to_Reg  := control.io.Mem_to_Reg
 
@@ -152,6 +154,8 @@ class Tile extends Module with Config {
   ex_mem_register.io.ex_Branch      := id_ex_register.io.ex_Branch
   ex_mem_register.io.ex_Mem_Read    := id_ex_register.io.ex_Mem_Read
   ex_mem_register.io.ex_Mem_Write   := id_ex_register.io.ex_Mem_Write
+  ex_mem_register.io.ex_Data_Size   := id_ex_register.io.ex_Data_Size
+  ex_mem_register.io.ex_Load_Type   := id_ex_register.io.ex_Load_Type
   ex_mem_register.io.ex_Reg_Write   := id_ex_register.io.ex_Reg_Write
   ex_mem_register.io.ex_Mem_to_Reg  := id_ex_register.io.ex_Mem_to_Reg
 
@@ -161,6 +165,8 @@ class Tile extends Module with Config {
   datacache.io.write_data := ex_mem_register.io.mem_rs2_out
   datacache.io.Mem_Read   := ex_mem_register.io.mem_Mem_Read
   datacache.io.Mem_Write  := ex_mem_register.io.mem_Mem_Write
+  datacache.io.Data_Size  := ex_mem_register.io.mem_Data_Size
+  datacache.io.Load_Type  := ex_mem_register.io.mem_Load_Type
 
   // generate PC_Src signal
   datapath.io.mem_datapathio.mem_Branch := ex_mem_register.io.mem_Branch
