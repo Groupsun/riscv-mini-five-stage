@@ -5,6 +5,7 @@
 *
 * Generate the control signal for the processor
 * 03-01-2019 - temporary for the basic 7 instructions(BEQ, LW, SW, R-format)
+* 08-01-2019 - add ALU operations
 * */
 
 package riscv_mini_five_stage

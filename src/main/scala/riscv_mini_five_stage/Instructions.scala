@@ -5,6 +5,7 @@
 *
 * Instruction object for processor
 * 02-01-2019 - implemented 7 basic
+* 08-01-2019 - add ALU operations, up to 19 instructions
 * */
 
 package riscv_mini_five_stage

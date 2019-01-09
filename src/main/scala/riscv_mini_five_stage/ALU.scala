@@ -5,6 +5,7 @@
 *
 * Arithmatic and logic unit of processor
 * 05-01-2019 - implemented 4 basic oprations (ADD, SUB, AND, OR)
+* 08-01-2019 - add operations, now supported mostly ALU functions
 * */
 
 package riscv_mini_five_stage
