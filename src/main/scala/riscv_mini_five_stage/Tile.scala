@@ -32,10 +32,8 @@ class Tile extends Module with Config {
     val ex_rs2_out        = Output(UInt(WLEN.W))
     val ex_alu_sum        = Output(UInt(WLEN.W))
     val ex_alu_conflag    = Output(UInt(CONFLAG_SIGLEN.W))
-    val ex_branch_addr    = Output(UInt(WLEN.W))
     val ex_rd             = Output(UInt(REG_LEN.W))
     val mem_rd            = Output(UInt(REG_LEN.W))
-    val mem_branch_addr   = Output(UInt(WLEN.W))
     val mem_alu_sum       = Output(UInt(WLEN.W))
     val mem_writedata     = Output(UInt(WLEN.W))
     val mem_dataout       = Output(UInt(WLEN.W))
@@ -58,7 +56,6 @@ class Tile extends Module with Config {
 
   /* IF stage */
   // generate next PC address
-  datapath.io.if_datapathio.if_pc_branch_addr := ex_mem_register.io.mem_branch_addr
   datapath.io.if_datapathio.if_pc             := pc.io.pc_out
 
   // PC
@@ -127,6 +124,10 @@ class Tile extends Module with Config {
   datapath.io.ex_datapathio.ex_pc   := id_ex_register.io.ex_pc
   datapath.io.ex_datapathio.ex_imm  := id_ex_register.io.ex_imm
 
+  // branch units
+  datapath.io.ex_datapathio.ex_Branch := id_ex_register.io.ex_Branch
+  datapath.io.ex_datapathio.ex_alu_conflag := alu.io.Conflag
+
   // ALU oprand B select
   datapath.io.ex_datapathio.ex_rs2_out := id_ex_register.io.ex_rs2_out
   datapath.io.ex_datapathio.ex_ALU_Src := id_ex_register.io.ex_ALU_Src
@@ -141,17 +142,13 @@ class Tile extends Module with Config {
   io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
   io.ex_alu_sum     := alu.io.Sum
   io.ex_alu_conflag := alu.io.Conflag
-  io.ex_branch_addr := datapath.io.ex_datapathio.ex_branch_addr
   io.ex_rd          := id_ex_register.io.ex_rd
   //monitor -------------------------
 
   /* EX/MEM pipeline register */
-  ex_mem_register.io.ex_branch_addr := datapath.io.ex_datapathio.ex_branch_addr
   ex_mem_register.io.ex_alu_sum     := alu.io.Sum
-  ex_mem_register.io.ex_alu_conflag := alu.io.Conflag
   ex_mem_register.io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
   ex_mem_register.io.ex_rd          := id_ex_register.io.ex_rd
-  ex_mem_register.io.ex_Branch      := id_ex_register.io.ex_Branch
   ex_mem_register.io.ex_Mem_Read    := id_ex_register.io.ex_Mem_Read
   ex_mem_register.io.ex_Mem_Write   := id_ex_register.io.ex_Mem_Write
   ex_mem_register.io.ex_Data_Size   := id_ex_register.io.ex_Data_Size
@@ -168,13 +165,8 @@ class Tile extends Module with Config {
   datacache.io.Data_Size  := ex_mem_register.io.mem_Data_Size
   datacache.io.Load_Type  := ex_mem_register.io.mem_Load_Type
 
-  // generate PC_Src signal
-  datapath.io.mem_datapathio.mem_Branch     := ex_mem_register.io.mem_Branch
-  datapath.io.mem_datapathio.mem_Conflag    := ex_mem_register.io.mem_alu_conflag
-
   //monitor -------------------------
   io.mem_rd           := ex_mem_register.io.mem_rd
-  io.mem_branch_addr  := ex_mem_register.io.mem_branch_addr
   io.mem_alu_sum      := ex_mem_register.io.mem_alu_sum
   io.mem_writedata    := ex_mem_register.io.mem_rs2_out
   io.mem_dataout      := datacache.io.data_out

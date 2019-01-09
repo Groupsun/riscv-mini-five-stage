@@ -15,7 +15,6 @@ class Datapath_Test(c: Datapath) extends PeekPokeTester(c) {
   poke(c.io.ex_datapathio.ex_imm, imm)
   poke(c.io.ex_datapathio.ex_pc, pc)
   poke(c.io.ex_datapathio.ex_ALU_Src, alu_src)
-  peek(c.io.ex_datapathio.ex_branch_addr)
   peek(c.io.ex_datapathio.alu_b_src)
   step(1)
 }

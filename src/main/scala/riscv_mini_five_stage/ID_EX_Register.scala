@@ -23,9 +23,9 @@ class ID_EX_Registerio extends Bundle with Config {
   // EX stage
   val ALU_Src    = Input(UInt(ALU_SRC_SIG_LEN.W))
   val ALUOp      = Input(UInt(ALUOP_SIG_LEN.W))
+  val Branch     = Input(UInt(BRANCH_SIG_LEN.W))
 
   // MEM stage
-  val Branch     = Input(UInt(BRANCH_SIG_LEN.W))
   val Mem_Read   = Input(UInt(MEM_READ_SIG_LEN.W))
   val Mem_Write  = Input(UInt(MEM_WRITE_SIG_LEN.W))
   val Data_Size  = Input(UInt(DATA_SIZE_SIG_LEN.W))

@@ -12,24 +12,19 @@ package riscv_mini_five_stage
 import chisel3._
 
 class IF_datapathio extends Bundle with Config {
-  val if_pc_branch_addr = Input(UInt(WLEN.W))
   val if_pc             = Input(UInt(WLEN.W))
   val if_new_pc         = Output(UInt(WLEN.W))
 }
 
 class EX_datapathio extends Bundle with Config {
-  val ex_rs2_out = Input(UInt(WLEN.W))
-  val ex_imm     = Input(UInt(WLEN.W))
-  val ex_pc      = Input(UInt(WLEN.W))
-  val ex_ALU_Src = Input(UInt(ALU_SRC_SIG_LEN.W))
+  val ex_rs2_out      = Input(UInt(WLEN.W))
+  val ex_imm          = Input(UInt(WLEN.W))
+  val ex_pc           = Input(UInt(WLEN.W))
+  val ex_ALU_Src      = Input(UInt(ALU_SRC_SIG_LEN.W))
+  val ex_Branch       = Input(UInt(BRANCH_SIG_LEN.W))
+  val ex_alu_conflag  = Input(UInt(CONFLAG_SIGLEN.W))
 
-  val ex_branch_addr = Output(UInt(WLEN.W))
   val alu_b_src      = Output(UInt(WLEN.W))
-}
-
-class MEM_datapathio extends Bundle with Config {
-  val mem_Branch = Input(UInt(BRANCH_SIG_LEN.W))
-  val mem_Conflag = Input(UInt(CONFLAG_SIGLEN.W))
 }
 
 class WB_datapathio extends Bundle with Config {
@@ -42,7 +37,6 @@ class WB_datapathio extends Bundle with Config {
 class Datapathio extends Bundle with Config {
   val if_datapathio = new IF_datapathio
   val ex_datapathio = new EX_datapathio
-  val mem_datapathio = new MEM_datapathio
   val wb_datapathio = new WB_datapathio
 }
 
@@ -53,13 +47,14 @@ class Datapath extends Module with Config {
   // generate increment PC
   val PC_4 = io.if_datapathio.if_pc + 4.U
 
+  // calculate branch address
+  val ex_branch_addr = io.ex_datapathio.ex_pc + io.ex_datapathio.ex_imm.asUInt()
+
   // generate next PC
-  val PC_Src = io.mem_datapathio.mem_Conflag & io.mem_datapathio.mem_Branch
-  io.if_datapathio.if_new_pc := Mux(PC_Src.toBool(), io.if_datapathio.if_pc_branch_addr, PC_4)
+  val PC_Src = io.ex_datapathio.ex_alu_conflag & io.ex_datapathio.ex_Branch
+  io.if_datapathio.if_new_pc := Mux(PC_Src.toBool(), ex_branch_addr, PC_4)
 
   /* EX stage */
-  // calculate branch address
-  io.ex_datapathio.ex_branch_addr := io.ex_datapathio.ex_pc + io.ex_datapathio.ex_imm.asUInt()
 
   // select ALU oprand B source
   io.ex_datapathio.alu_b_src := Mux(io.ex_datapathio.ex_ALU_Src.toBool(),
