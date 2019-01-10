@@ -27,7 +27,7 @@ class ImmGen extends Module with Config {
   val Simm  = Cat(io.inst_in(31, 25), io.inst_in(11, 7)).asSInt()
   val SBimm = Cat(io.inst_in(31), io.inst_in(7), io.inst_in(30, 25), io.inst_in(11, 8), 0.U(1.W)).asSInt()
   val Uimm  = Cat(io.inst_in(31, 12), 0.U(12.W)).asSInt()
-  val UJimm = Cat(io.inst_in(31), io.inst_in(19, 12), io.inst_in(20), io.inst_in(30, 21), 0.U(12.W)).asSInt()
+  val UJimm = Cat(io.inst_in(31), io.inst_in(19, 12), io.inst_in(20), io.inst_in(30, 21), 0.U(1.W)).asSInt()
 
   io.imm := MuxLookup(io.imm_sel, 0.S, Seq(
     IMM_R   -> Rimm,

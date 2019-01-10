@@ -7,6 +7,7 @@
 * 05-01-2019 - implemented 4 basic oprations (ADD, SUB, AND, OR)
 * 08-01-2019 - add operations, now supported mostly ALU functions
 * 09-01-2019 - add register set instructions
+* 10-01-2019 - add conditional branch conditions
 * */
 
 package riscv_mini_five_stage

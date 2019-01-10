@@ -75,6 +75,7 @@ class Tile extends Module with Config {
   if_id_register.io.if_flush    := io.if_flush
   if_id_register.io.if_inst     := instcache.io.inst
   if_id_register.io.if_pc       := pc.io.pc_out
+  if_id_register.io.if_pc_4     := datapath.io.if_datapathio.if_pc_4
 
   /* ID stage */
   // Main control unit
@@ -103,6 +104,8 @@ class Tile extends Module with Config {
   id_ex_register.io.ALU_Src     := control.io.ALU_Src
   id_ex_register.io.ALUOp       := control.io.ALUOp
   id_ex_register.io.Branch      := control.io.Branch
+  id_ex_register.io.Branch_Src  := control.io.Branch_Src
+  id_ex_register.io.Jump_Type   := control.io.Jump_Type
   id_ex_register.io.Mem_Read    := control.io.Mem_Read
   id_ex_register.io.Mem_Write   := control.io.Mem_Write
   id_ex_register.io.Data_Size   := control.io.Data_Size
@@ -116,17 +119,21 @@ class Tile extends Module with Config {
   id_ex_register.io.id_rs1     := if_id_register.io.id_rs1
   id_ex_register.io.id_rs2     := if_id_register.io.id_rs2
   id_ex_register.io.id_pc      := if_id_register.io.id_pc
+  id_ex_register.io.id_pc_4    := if_id_register.io.id_pc_4
   id_ex_register.io.id_inst    := if_id_register.io.id_inst
   id_ex_register.io.id_imm     := immgen.io.imm
 
   /* EX stage */
   // Adder of branch address
-  datapath.io.ex_datapathio.ex_pc   := id_ex_register.io.ex_pc
-  datapath.io.ex_datapathio.ex_imm  := id_ex_register.io.ex_imm
+  datapath.io.ex_datapathio.ex_pc         := id_ex_register.io.ex_pc
+  datapath.io.ex_datapathio.ex_imm        := id_ex_register.io.ex_imm
+  datapath.io.ex_datapathio.ex_rs1_out    := id_ex_register.io.ex_rs1_out
+  datapath.io.ex_datapathio.ex_Branch_Src := id_ex_register.io.ex_Branch_Src
 
   // branch units
-  datapath.io.ex_datapathio.ex_Branch := id_ex_register.io.ex_Branch
-  datapath.io.ex_datapathio.ex_alu_conflag := alu.io.Conflag
+  datapath.io.ex_datapathio.ex_Branch       := id_ex_register.io.ex_Branch
+  datapath.io.ex_datapathio.ex_alu_conflag  := alu.io.Conflag
+  datapath.io.ex_datapathio.ex_Jump_Type    := id_ex_register.io.ex_Jump_Type
 
   // ALU oprand B select
   datapath.io.ex_datapathio.ex_rs2_out := id_ex_register.io.ex_rs2_out
@@ -149,6 +156,7 @@ class Tile extends Module with Config {
   ex_mem_register.io.ex_alu_sum     := alu.io.Sum
   ex_mem_register.io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
   ex_mem_register.io.ex_rd          := id_ex_register.io.ex_rd
+  ex_mem_register.io.ex_pc_4        := id_ex_register.io.ex_pc_4
   ex_mem_register.io.ex_Mem_Read    := id_ex_register.io.ex_Mem_Read
   ex_mem_register.io.ex_Mem_Write   := id_ex_register.io.ex_Mem_Write
   ex_mem_register.io.ex_Data_Size   := id_ex_register.io.ex_Data_Size
@@ -173,16 +181,18 @@ class Tile extends Module with Config {
   //monitor -------------------------
 
   /* MEM/WB pipeline register */
-  mem_wb_register.io.mem_Reg_Write  := ex_mem_register.io.mem_Reg_Write
-  mem_wb_register.io.mem_Mem_to_Reg := ex_mem_register.io.mem_Mem_to_Reg
-  mem_wb_register.io.mem_dataout    := datacache.io.data_out
-  mem_wb_register.io.mem_alu_sum    := ex_mem_register.io.mem_alu_sum
-  mem_wb_register.io.mem_rd         := ex_mem_register.io.mem_rd
+  mem_wb_register.io.mem_Reg_Write    := ex_mem_register.io.mem_Reg_Write
+  mem_wb_register.io.mem_Mem_to_Reg   := ex_mem_register.io.mem_Mem_to_Reg
+  mem_wb_register.io.mem_dataout      := datacache.io.data_out
+  mem_wb_register.io.mem_alu_sum      := ex_mem_register.io.mem_alu_sum
+  mem_wb_register.io.mem_rd           := ex_mem_register.io.mem_rd
+  mem_wb_register.io.mem_pc_4         := ex_mem_register.io.mem_pc_4
 
   /* WB stage */
-  datapath.io.wb_datapathio.wb_alu_sum    := mem_wb_register.io.wb_alu_sum
-  datapath.io.wb_datapathio.wb_dataout    := mem_wb_register.io.wb_dataout
-  datapath.io.wb_datapathio.wb_Mem_to_Reg := mem_wb_register.io.wb_Mem_to_Reg
+  datapath.io.wb_datapathio.wb_alu_sum      := mem_wb_register.io.wb_alu_sum
+  datapath.io.wb_datapathio.wb_dataout      := mem_wb_register.io.wb_dataout
+  datapath.io.wb_datapathio.wb_pc_4         := mem_wb_register.io.wb_pc_4
+  datapath.io.wb_datapathio.wb_Mem_to_Reg   := mem_wb_register.io.wb_Mem_to_Reg
 
   //monitor -------------------------
   io.wb_rd            := mem_wb_register.io.wb_rd
