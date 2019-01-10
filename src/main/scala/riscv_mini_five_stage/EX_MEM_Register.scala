@@ -15,6 +15,8 @@ class EX_MEM_Registerio extends Bundle with Config {
   val ex_rs2_out      = Input(UInt(WLEN.W))
   val ex_rd           = Input(UInt(REG_LEN.W))
   val ex_pc_4         = Input(UInt(WLEN.W))
+  val ex_imm          = Input(UInt(WLEN.W))
+  val ex_aui_pc       = Input(UInt(WLEN.W))
 
   /* Control signals */
   // MEM stage
@@ -40,6 +42,8 @@ class EX_MEM_Registerio extends Bundle with Config {
   val mem_rs2_out     = Output(UInt(WLEN.W))
   val mem_rd          = Output(UInt(REG_LEN.W))
   val mem_pc_4        = Output(UInt(WLEN.W))
+  val mem_imm         = Output(UInt(WLEN.W))
+  val mem_aui_pc      = Output(UInt(WLEN.W))
 }
 
 class EX_MEM_Register extends Module with Config {
@@ -50,6 +54,8 @@ class EX_MEM_Register extends Module with Config {
   val rs2_out       = RegInit(0.U(WLEN.W))
   val rd            = RegInit(0.U(REG_LEN.W))
   val pc_4          = RegInit(0.U(WLEN.W))
+  val imm           = RegInit(0.U(WLEN.W))
+  val aui_pc        = RegInit(0.U(WLEN.W))
 
   val mem_read      = RegInit(0.U(MEM_READ_SIG_LEN.W))
   val mem_write     = RegInit(0.U(MEM_WRITE_SIG_LEN.W))
@@ -63,6 +69,8 @@ class EX_MEM_Register extends Module with Config {
   rs2_out       := io.ex_rs2_out
   rd            := io.ex_rd
   pc_4          := io.ex_pc_4
+  imm           := io.ex_imm
+  aui_pc        := io.ex_aui_pc
   mem_read      := io.ex_Mem_Read
   mem_write     := io.ex_Mem_Write
   data_size     := io.ex_Data_Size
@@ -75,6 +83,8 @@ class EX_MEM_Register extends Module with Config {
   io.mem_rs2_out      := rs2_out
   io.mem_rd           := rd
   io.mem_pc_4         := pc_4
+  io.mem_imm          := imm
+  io.mem_aui_pc       := aui_pc
   io.mem_Mem_Read     := mem_read
   io.mem_Mem_Write    := mem_write
   io.mem_Data_Size    := data_size

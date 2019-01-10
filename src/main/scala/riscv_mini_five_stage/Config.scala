@@ -33,7 +33,7 @@ trait Config {
   val BRANCH_SIG_LEN      = 1
   val MEM_WRITE_SIG_LEN   = 1
   val MEM_READ_SIG_LEN    = 1
-  val REG_SRC_SIG_LEN     = 2
+  val REG_SRC_SIG_LEN     = 3
   val CONFLAG_SIGLEN      = 1
   val PC_SRC_SIG_LEN      = 1
   val FORWARD_A_SIG_LEN   = 2

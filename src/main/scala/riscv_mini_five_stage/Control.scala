@@ -8,6 +8,8 @@
 * 08-01-2019 - add ALU operations
 * 09-01-2019 - add register set instructions and memory instructions
 * 10-01-2019 - add conditional branch and jump and link instructions
+*
+* 10-01-2019 - Implemented 38 basic instructions of RV32I, except the OS instructions
 * */
 
 package riscv_mini_five_stage
@@ -70,10 +72,12 @@ object Control{
   val Load_Unsigned = 1.U(1.W)
 
   // Mem_to_Reg
-  val RegWrite_XXX    = 0.U(2.W)
-  val RegWrite_ALU    = 0.U(2.W)
-  val RegWrite_Mem    = 1.U(2.W)
-  val RegWrite_PC_4  = 2.U(2.W)
+  val RegWrite_XXX    = 0.U(3.W)
+  val RegWrite_ALU    = 0.U(3.W)
+  val RegWrite_Mem    = 1.U(3.W)
+  val RegWrite_PC_4   = 2.U(3.W)
+  val RegWrite_imm    = 3.U(3.W)
+  val RegWrite_ipc    = 4.U(3.W)
 
 //                      Reg_Write      Imm_sel     ALU_Src       ALUOp         Branch         Branch_Src     Mem_Read          Mem_Write         Data_Size     Load_Type         Mem_to_Reg       Jump_Type
 //                         |              |           |            |              |              |               |                 |                 |             |                 |               |
@@ -122,6 +126,9 @@ object Control{
 
     JAL      -> List(Reg_Write_True ,   IMM_UJ,   ALU_B_rs2,   ALU_ADD   ,   Branch_True ,   Branch_PC ,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_PC_4, NonConditional),
     JALR     -> List(Reg_Write_True ,   IMM_I ,   ALU_B_rs2,   ALU_ADD   ,   Branch_True ,   Branch_Rs1,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_PC_4, NonConditional),
+
+    LUI      -> List(Reg_Write_True ,   IMM_U ,   ALU_B_rs2,   ALU_ADD   ,   Branch_False,   Branch_XXX,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_imm ,  Conditional),
+    AUIPC    -> List(Reg_Write_True ,   IMM_U ,   ALU_B_rs2,   ALU_ADD   ,   Branch_False,   Branch_XXX,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_ipc ,  Conditional),
 
     NOP      -> List(Reg_Write_False,   IMM_X ,   ALU_B_XXX,   ALU_OP_XXX,   Branch_False,   Branch_XXX,   Mem_Read_False,   Mem_Write_False,   Data_Size_W,   Load_XXX     ,   RegWrite_XXX,   Conditional)
   )

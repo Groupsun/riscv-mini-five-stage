@@ -30,12 +30,15 @@ class EX_datapathio extends Bundle with Config {
   val ex_Jump_Type    = Input(UInt(JUMP_TYPE_SIG_LEN.W))
 
   val alu_b_src         = Output(UInt(WLEN.W))
+  val ex_aui_pc         = Output(UInt(WLEN.W))
 }
 
 class WB_datapathio extends Bundle with Config {
   val wb_alu_sum        = Input(UInt(WLEN.W))
   val wb_dataout        = Input(UInt(WLEN.W))
   val wb_pc_4           = Input(UInt(WLEN.W))
+  val wb_imm            = Input(UInt(WLEN.W))
+  val wb_aui_pc         = Input(UInt(WLEN.W))
   val wb_Mem_to_Reg     = Input(UInt(REG_SRC_SIG_LEN.W))
   val wb_reg_writedata  = Output(UInt(WLEN.W))
 }
@@ -57,6 +60,7 @@ class Datapath extends Module with Config {
   // calculate branch address
   val ex_branch_addr = Mux(io.ex_datapathio.ex_Branch_Src.toBool(), io.ex_datapathio.ex_rs1_out, io.ex_datapathio.ex_pc) +
     io.ex_datapathio.ex_imm.asUInt()
+  io.ex_datapathio.ex_aui_pc := ex_branch_addr
 
   // generate next PC
   val PC_Src = Mux(io.ex_datapathio.ex_Jump_Type.toBool(), 1.U, io.ex_datapathio.ex_alu_conflag) &
@@ -78,7 +82,9 @@ class Datapath extends Module with Config {
     io.wb_datapathio.wb_Mem_to_Reg, io.wb_datapathio.wb_alu_sum, Seq(
       RegWrite_ALU    -> io.wb_datapathio.wb_alu_sum,
       RegWrite_Mem    -> io.wb_datapathio.wb_dataout,
-      RegWrite_PC_4   -> io.wb_datapathio.wb_pc_4
+      RegWrite_PC_4   -> io.wb_datapathio.wb_pc_4,
+      RegWrite_imm    -> io.wb_datapathio.wb_imm,
+      RegWrite_ipc    -> io.wb_datapathio.wb_aui_pc
     ))
 }
 

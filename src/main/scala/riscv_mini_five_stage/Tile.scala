@@ -9,6 +9,8 @@
 * 05-01-2019 - connect EX stage datapath, ALU and EX/MEM pipeline register
 * 07-01-2019 - finish design of the basic datapath, which implemented 7 basic RV32I instructions, but without hazard detection
 *              and forward unit
+* 10-01-2019 - Implemented all basic instructions of RV32I, except the OS instructions, up to 38 instructions, without hazard detection
+*              and forward unit
 * */
 
 package riscv_mini_five_stage
@@ -157,6 +159,8 @@ class Tile extends Module with Config {
   ex_mem_register.io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
   ex_mem_register.io.ex_rd          := id_ex_register.io.ex_rd
   ex_mem_register.io.ex_pc_4        := id_ex_register.io.ex_pc_4
+  ex_mem_register.io.ex_imm         := id_ex_register.io.ex_imm
+  ex_mem_register.io.ex_aui_pc      := datapath.io.ex_datapathio.ex_aui_pc
   ex_mem_register.io.ex_Mem_Read    := id_ex_register.io.ex_Mem_Read
   ex_mem_register.io.ex_Mem_Write   := id_ex_register.io.ex_Mem_Write
   ex_mem_register.io.ex_Data_Size   := id_ex_register.io.ex_Data_Size
@@ -187,11 +191,15 @@ class Tile extends Module with Config {
   mem_wb_register.io.mem_alu_sum      := ex_mem_register.io.mem_alu_sum
   mem_wb_register.io.mem_rd           := ex_mem_register.io.mem_rd
   mem_wb_register.io.mem_pc_4         := ex_mem_register.io.mem_pc_4
+  mem_wb_register.io.mem_imm          := ex_mem_register.io.mem_imm
+  mem_wb_register.io.mem_aui_pc       := ex_mem_register.io.mem_aui_pc
 
   /* WB stage */
   datapath.io.wb_datapathio.wb_alu_sum      := mem_wb_register.io.wb_alu_sum
   datapath.io.wb_datapathio.wb_dataout      := mem_wb_register.io.wb_dataout
   datapath.io.wb_datapathio.wb_pc_4         := mem_wb_register.io.wb_pc_4
+  datapath.io.wb_datapathio.wb_imm          := mem_wb_register.io.wb_imm
+  datapath.io.wb_datapathio.wb_aui_pc       := mem_wb_register.io.wb_aui_pc
   datapath.io.wb_datapathio.wb_Mem_to_Reg   := mem_wb_register.io.wb_Mem_to_Reg
 
   //monitor -------------------------
