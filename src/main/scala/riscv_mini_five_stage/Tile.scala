@@ -41,6 +41,10 @@ class Tile extends Module with Config {
     val mem_dataout       = Output(UInt(WLEN.W))
     val wb_rd             = Output(UInt(REG_LEN.W))
     val wb_registerwrite  = Output(UInt(WLEN.W))
+
+    // forward
+    val Forward_A         = Output(UInt(FORWARD_A_SIG_LEN.W))
+    val Forward_B         = Output(UInt(FORWARD_B_SIG_LEN.W))
   })
 
   val pc              = Module(new PC)
@@ -55,6 +59,7 @@ class Tile extends Module with Config {
   val ex_mem_register = Module(new EX_MEM_Register)
   val datacache       = Module(new DataCache)
   val mem_wb_register = Module(new MEM_WB_Register)
+  val forward         = Module(new Forward)
 
   /* IF stage */
   // generate next PC address
@@ -137,12 +142,17 @@ class Tile extends Module with Config {
   datapath.io.ex_datapathio.ex_alu_conflag  := alu.io.Conflag
   datapath.io.ex_datapathio.ex_Jump_Type    := id_ex_register.io.ex_Jump_Type
 
+  // Forward
+  datapath.io.ex_datapathio.mem_alu_sum     := ex_mem_register.io.mem_alu_sum
+  datapath.io.ex_datapathio.Forward_A       := forward.io.Forward_A
+  datapath.io.ex_datapathio.Forward_B       := forward.io.Forward_B
+
   // ALU oprand B select
   datapath.io.ex_datapathio.ex_rs2_out := id_ex_register.io.ex_rs2_out
   datapath.io.ex_datapathio.ex_ALU_Src := id_ex_register.io.ex_ALU_Src
 
   // ALU
-  alu.io.Src_A := id_ex_register.io.ex_rs1_out
+  alu.io.Src_A := datapath.io.ex_datapathio.alu_a_src
   alu.io.Src_B := datapath.io.ex_datapathio.alu_b_src
   alu.io.ALUOp := id_ex_register.io.ex_ALUOp
 
@@ -207,7 +217,17 @@ class Tile extends Module with Config {
   io.wb_registerwrite := datapath.io.wb_datapathio.wb_reg_writedata
   //monitor -------------------------
 
+  /* Forward Unit */
+  forward.io.ex_mem_Reg_Write := ex_mem_register.io.mem_Reg_Write
+  forward.io.ex_mem_rd        := ex_mem_register.io.mem_rd
+  forward.io.mem_wb_Reg_Write := mem_wb_register.io.wb_Reg_Write
+  forward.io.mem_wb_rd        := mem_wb_register.io.wb_rd
+  forward.io.id_ex_rs1        := id_ex_register.io.ex_rs1
+  forward.io.id_ex_rs2        := id_ex_register.io.ex_rs2
+
   /* output test */
+  io.Forward_A := forward.io.Forward_A
+  io.Forward_B := forward.io.Forward_B
 }
 
 object Tile extends App {

@@ -30,6 +30,8 @@ class Tile_Test(c: Tile) extends PeekPokeTester(c) {
     peek(c.io.mem_dataout)
     peek(c.io.wb_rd)
     peek(c.io.wb_registerwrite)
+    peek(c.io.Forward_A)
+    peek(c.io.Forward_B)
     step(1)
   }
 }

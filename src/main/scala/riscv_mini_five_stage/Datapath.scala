@@ -11,6 +11,7 @@ package riscv_mini_five_stage
 import chisel3._
 import chisel3.util.MuxLookup
 import Control._
+import Forward._
 
 class IF_datapathio extends Bundle with Config {
   val if_pc             = Input(UInt(WLEN.W))
@@ -29,8 +30,15 @@ class EX_datapathio extends Bundle with Config {
   val ex_Branch_Src   = Input(UInt(BRANCH_SRC_SIG_LEN.W))
   val ex_Jump_Type    = Input(UInt(JUMP_TYPE_SIG_LEN.W))
 
+  // Forward unit
+  val mem_alu_sum  = Input(UInt(WLEN.W))
+  val Forward_A       = Input(UInt(FORWARD_A_SIG_LEN.W))
+  val Forward_B       = Input(UInt(FORWARD_B_SIG_LEN.W))
+
   val alu_b_src         = Output(UInt(WLEN.W))
   val ex_aui_pc         = Output(UInt(WLEN.W))
+
+  val alu_a_src          = Output(UInt(WLEN.W))
 }
 
 class WB_datapathio extends Bundle with Config {
@@ -58,7 +66,7 @@ class Datapath extends Module with Config {
   io.if_datapathio.if_pc_4 := PC_4
 
   // calculate branch address
-  val ex_branch_addr = Mux(io.ex_datapathio.ex_Branch_Src.toBool(), io.ex_datapathio.ex_rs1_out, io.ex_datapathio.ex_pc) +
+  val ex_branch_addr = Mux(io.ex_datapathio.ex_Branch_Src.toBool(), io.ex_datapathio.alu_a_src, io.ex_datapathio.ex_pc) +
     io.ex_datapathio.ex_imm.asUInt()
   io.ex_datapathio.ex_aui_pc := ex_branch_addr
 
@@ -68,10 +76,24 @@ class Datapath extends Module with Config {
   io.if_datapathio.if_new_pc := Mux(PC_Src.toBool(), ex_branch_addr, PC_4)
 
   /* EX stage */
+  // Forward unit
+  io.ex_datapathio.alu_a_src := MuxLookup(io.ex_datapathio.Forward_A,
+    io.ex_datapathio.ex_rs1_out, Seq(
+      Forward_A_rs1       -> io.ex_datapathio.ex_rs1_out,
+      Forward_A_mem_wb_rd -> io.wb_datapathio.wb_reg_writedata,
+      Forward_A_ex_mem_rd -> io.ex_datapathio.mem_alu_sum
+    ))
+
+  val operand_b = MuxLookup(io.ex_datapathio.Forward_B,
+    io.ex_datapathio.ex_rs2_out, Seq(
+      Forward_B_rs1       -> io.ex_datapathio.ex_rs2_out,
+      Forward_B_mem_wb_rd -> io.wb_datapathio.wb_reg_writedata,
+      Forward_B_ex_mem_rd -> io.ex_datapathio.mem_alu_sum
+    ))
 
   // select ALU oprand B source
   io.ex_datapathio.alu_b_src := Mux(io.ex_datapathio.ex_ALU_Src.toBool(),
-    io.ex_datapathio.ex_imm, io.ex_datapathio.ex_rs2_out)
+    io.ex_datapathio.ex_imm, operand_b)
 
   /* MEM stage */
   // generate the PC_Src signal and pass to IF stage, inside the datapath module
