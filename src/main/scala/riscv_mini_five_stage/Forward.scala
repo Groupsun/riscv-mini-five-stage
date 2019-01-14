@@ -54,6 +54,6 @@ class Forward extends Module with Config {
                      !ex_mem_b_con                &&
                      (io.mem_wb_rd === io.id_ex_rs2)
 
-  io.Forward_A := Cat(ex_mem_a_con, ex_wb_b_con)
+  io.Forward_A := Cat(ex_mem_a_con, ex_wb_a_con)
   io.Forward_B := Cat(ex_mem_b_con, ex_wb_b_con)
 }

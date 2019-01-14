@@ -166,7 +166,7 @@ class Tile extends Module with Config {
 
   /* EX/MEM pipeline register */
   ex_mem_register.io.ex_alu_sum     := alu.io.Sum
-  ex_mem_register.io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
+  ex_mem_register.io.ex_rs2_out     := datapath.io.ex_datapathio.forward_rs2_out
   ex_mem_register.io.ex_rd          := id_ex_register.io.ex_rd
   ex_mem_register.io.ex_pc_4        := id_ex_register.io.ex_pc_4
   ex_mem_register.io.ex_imm         := id_ex_register.io.ex_imm

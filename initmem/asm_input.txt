@@ -1,0 +1,8 @@
+NOP
+ADDI x3, x0, 0x05
+SW   x2, x1, 0x00
+ADDI x2, x2, 0x01
+ADDI x1, x1, 0x04
+BLT  x2, x3, 0x-06
+NOP
+NOP

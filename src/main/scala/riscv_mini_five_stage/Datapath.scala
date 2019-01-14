@@ -31,14 +31,15 @@ class EX_datapathio extends Bundle with Config {
   val ex_Jump_Type    = Input(UInt(JUMP_TYPE_SIG_LEN.W))
 
   // Forward unit
-  val mem_alu_sum  = Input(UInt(WLEN.W))
+  val mem_alu_sum     = Input(UInt(WLEN.W))
   val Forward_A       = Input(UInt(FORWARD_A_SIG_LEN.W))
   val Forward_B       = Input(UInt(FORWARD_B_SIG_LEN.W))
 
   val alu_b_src         = Output(UInt(WLEN.W))
   val ex_aui_pc         = Output(UInt(WLEN.W))
+  val forward_rs2_out   = Output(UInt(WLEN.W))
 
-  val alu_a_src          = Output(UInt(WLEN.W))
+  val alu_a_src         = Output(UInt(WLEN.W))
 }
 
 class WB_datapathio extends Bundle with Config {
@@ -94,6 +95,7 @@ class Datapath extends Module with Config {
   // select ALU oprand B source
   io.ex_datapathio.alu_b_src := Mux(io.ex_datapathio.ex_ALU_Src.toBool(),
     io.ex_datapathio.ex_imm, operand_b)
+  io.ex_datapathio.forward_rs2_out := operand_b
 
   /* MEM stage */
   // generate the PC_Src signal and pass to IF stage, inside the datapath module

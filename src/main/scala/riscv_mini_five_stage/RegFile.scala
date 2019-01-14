@@ -25,19 +25,14 @@ class RegFile extends Module with Config {
   val io = IO(new RegFileio)
 
   val regfile = Mem(REGFILE_LEN, UInt(WLEN.W))
-
-  /*
-  * Regfile init data :
-  * x1 = 0x0A = 10
-    x2 = 0x0B = 11
-    x3 = 0x0C = 12
-    x4 = 0x0F = 15
-    x5 = 0x0F = 15
-  * */
   loadMemoryFromFile(regfile, "initmem/regfile.txt")
 
-  io.rs1_out := regfile.read(io.rs1)
-  io.rs2_out := regfile.read(io.rs2)
+  // read and write in the same cycle
+  val inside_forward_1 = io.regwrite.toBool() && (io.rs1 === io.rd)
+  val inside_forward_2 = io.regwrite.toBool() && (io.rs2 === io.rd)
+
+  io.rs1_out := Mux(inside_forward_1, io.wdata, regfile(io.rs1))
+  io.rs2_out := Mux(inside_forward_2, io.wdata, regfile(io.rs2))
 
   regfile.write(io.rd, Mux(io.regwrite.toBool(), Mux(io.rd === 0.U, 0.U, io.wdata), regfile(io.rd)))
 }
