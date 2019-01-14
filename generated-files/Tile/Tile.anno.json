@@ -6,5 +6,21 @@
     "hexOrBinary":{
       "name":"h"
     }
+  },
+  {
+    "class":"firrtl.annotations.LoadMemoryAnnotation",
+    "target":"Tile.RegFile.regfile",
+    "fileName":"initmem/regfile.txt",
+    "hexOrBinary":{
+      "name":"h"
+    }
+  },
+  {
+    "class":"firrtl.annotations.LoadMemoryAnnotation",
+    "target":"Tile.DataCache.cache",
+    "fileName":"initmem/datacache.txt",
+    "hexOrBinary":{
+      "name":"h"
+    }
   }
 ]
