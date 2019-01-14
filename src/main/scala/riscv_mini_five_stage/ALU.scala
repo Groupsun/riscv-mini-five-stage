@@ -3,7 +3,7 @@
 * Date     : 05-01-2019
 * Author   : SunnyChen
 *
-* Arithmatic and logic unit of processor
+* Arithmetic and logic unit of processor
 * 05-01-2019 - implemented 4 basic oprations (ADD, SUB, AND, OR)
 * 08-01-2019 - add operations, now supported mostly ALU functions
 * 09-01-2019 - add register set instructions
