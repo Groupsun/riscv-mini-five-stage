@@ -42,6 +42,13 @@ class EX_datapathio extends Bundle with Config {
   val alu_a_src         = Output(UInt(WLEN.W))
 }
 
+class MEM_datapathio extends Bundle with Config {
+  val mem_rs2_out           = Input(UInt(WLEN.W))
+  val MemWrite_Src          = Input(UInt(MEMWRITE_SRC_SIG_LEN.W))
+
+  val mem_writedata         = Output(UInt(WLEN.W))
+}
+
 class WB_datapathio extends Bundle with Config {
   val wb_alu_sum        = Input(UInt(WLEN.W))
   val wb_dataout        = Input(UInt(WLEN.W))
@@ -53,9 +60,10 @@ class WB_datapathio extends Bundle with Config {
 }
 
 class Datapathio extends Bundle with Config {
-  val if_datapathio = new IF_datapathio
-  val ex_datapathio = new EX_datapathio
-  val wb_datapathio = new WB_datapathio
+  val if_datapathio   = new IF_datapathio
+  val ex_datapathio   = new EX_datapathio
+  val mem_datapathio  = new MEM_datapathio
+  val wb_datapathio   = new WB_datapathio
 }
 
 class Datapath extends Module with Config {
@@ -98,7 +106,9 @@ class Datapath extends Module with Config {
   io.ex_datapathio.forward_rs2_out := operand_b
 
   /* MEM stage */
-  // generate the PC_Src signal and pass to IF stage, inside the datapath module
+  // Memory forward unit
+  io.mem_datapathio.mem_writedata := Mux(io.mem_datapathio.MemWrite_Src.toBool(),
+    io.wb_datapathio.wb_reg_writedata, io.mem_datapathio.mem_rs2_out)
 
   /* WB stage */
   // generate the data write back to the register file

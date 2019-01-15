@@ -132,6 +132,10 @@ object Instruction_Type {
 
 object Encoding {
   def main(args: Array[String]): Unit = {
+    generate_hexcode()
+  }
+
+  def generate_hexcode() = {
     val source = Source.fromFile("initmem/asm_input.txt")
     val lineiterator = source.getLines()
     val writer = new PrintWriter(new File("initmem/instcache.txt"))

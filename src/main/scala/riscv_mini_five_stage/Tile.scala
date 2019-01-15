@@ -45,6 +45,7 @@ class Tile extends Module with Config {
     // forward
     val Forward_A         = Output(UInt(FORWARD_A_SIG_LEN.W))
     val Forward_B         = Output(UInt(FORWARD_B_SIG_LEN.W))
+    val MemWrite_Src      = Output(UInt(MEMWRITE_SRC_SIG_LEN.W))
   })
 
   val pc              = Module(new PC)
@@ -171,6 +172,7 @@ class Tile extends Module with Config {
   ex_mem_register.io.ex_pc_4        := id_ex_register.io.ex_pc_4
   ex_mem_register.io.ex_imm         := id_ex_register.io.ex_imm
   ex_mem_register.io.ex_aui_pc      := datapath.io.ex_datapathio.ex_aui_pc
+  ex_mem_register.io.ex_rs2         := id_ex_register.io.ex_rs2
   ex_mem_register.io.ex_Mem_Read    := id_ex_register.io.ex_Mem_Read
   ex_mem_register.io.ex_Mem_Write   := id_ex_register.io.ex_Mem_Write
   ex_mem_register.io.ex_Data_Size   := id_ex_register.io.ex_Data_Size
@@ -179,9 +181,13 @@ class Tile extends Module with Config {
   ex_mem_register.io.ex_Mem_to_Reg  := id_ex_register.io.ex_Mem_to_Reg
 
   /* MEM stage */
+  // Memory forward
+  datapath.io.mem_datapathio.mem_rs2_out  := ex_mem_register.io.mem_rs2_out
+  datapath.io.mem_datapathio.MemWrite_Src := forward.io.MemWrite_Src
+
   // Datacache
   datacache.io.addr       := ex_mem_register.io.mem_alu_sum
-  datacache.io.write_data := ex_mem_register.io.mem_rs2_out
+  datacache.io.write_data := datapath.io.mem_datapathio.mem_writedata
   datacache.io.Mem_Read   := ex_mem_register.io.mem_Mem_Read
   datacache.io.Mem_Write  := ex_mem_register.io.mem_Mem_Write
   datacache.io.Data_Size  := ex_mem_register.io.mem_Data_Size
@@ -224,10 +230,13 @@ class Tile extends Module with Config {
   forward.io.mem_wb_rd        := mem_wb_register.io.wb_rd
   forward.io.id_ex_rs1        := id_ex_register.io.ex_rs1
   forward.io.id_ex_rs2        := id_ex_register.io.ex_rs2
+  forward.io.ex_mem_rs2       := ex_mem_register.io.mem_rs2
+  forward.io.ex_mem_Mem_Write := ex_mem_register.io.mem_Mem_Write
 
   /* output test */
-  io.Forward_A := forward.io.Forward_A
-  io.Forward_B := forward.io.Forward_B
+  io.Forward_A    := forward.io.Forward_A
+  io.Forward_B    := forward.io.Forward_B
+  io.MemWrite_Src := forward.io.MemWrite_Src
 }
 
 object Tile extends App {

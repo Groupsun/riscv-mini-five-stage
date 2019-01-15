@@ -32,11 +32,14 @@ class Tile_Test(c: Tile) extends PeekPokeTester(c) {
     peek(c.io.wb_registerwrite)
     peek(c.io.Forward_A)
     peek(c.io.Forward_B)
+    peek(c.io.MemWrite_Src)
     step(1)
   }
 }
 
 class Tile_Spec extends FlatSpec with Matchers {
+  Encoding.generate_hexcode()
+
   iotesters.Driver.execute(Array("--backend-name", "verilator"), () => new Tile) {
     c => new Tile_Test(c)
   }
