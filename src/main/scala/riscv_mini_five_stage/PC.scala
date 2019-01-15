@@ -12,7 +12,7 @@ import chisel3._
 
 class PCio extends Bundle with Config {
   val addr_input  = Input(UInt(WLEN.W))
-  val pc_write    = Input(UInt(PC_SIG_LEN.W))
+  val pc_write    = Input(UInt(PC_WRITE_SIG_LEN.W))
   val pc_out      = Output(UInt(WLEN.W))
 }
 

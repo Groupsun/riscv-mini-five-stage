@@ -129,7 +129,7 @@ NOP
 NOP
 ```
 
-The program above contains data hazards:
+The program above contains data hazard:
 
 - x2: between ADDI and SW
 
@@ -141,3 +141,25 @@ The correct status after running this program is:
 - x2 = 0x05
 - x3 = 0x05
 - Mem[sp] ~ Mem[sp + 0x14] = 0x01 ~ 0x05
+
+### data hazard test program
+
+```
+NOP
+ADDI x1, x0, 0x0A
+SW   x1, x0, 0x04
+LW   x2, x0, 0x04
+ADDI x3, x2, 0x10
+ADD  x4, x1, x3
+ADD  x5, x1, x3
+NOP
+NOP
+```
+
+The program above contains data hazards:
+
+- x1: between ADDI and SW
+- x2: between LW and ADDI
+- x3: between ADDI and ADD(write x4 and x5)
+
+The first and third data hazards could resolve by forward, the second data hazard must stall a cycle and then resolve by forward

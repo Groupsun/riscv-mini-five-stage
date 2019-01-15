@@ -19,6 +19,33 @@ class IF_datapathio extends Bundle with Config {
   val if_pc_4           = Output(UInt(WLEN.W))
 }
 
+class ID_datapathio extends Bundle with Config {
+  val Bubble      = Input(UInt(BUBBLE_SIG_LEN.W))
+  val Reg_Write   = Input(UInt(REGWRITE_SIG_LEN.W))
+  val ALU_Src     = Input(UInt(ALU_SRC_SIG_LEN.W))
+  val ALUOp       = Input(UInt(ALUOP_SIG_LEN.W))
+  val Branch      = Input(UInt(BRANCH_SIG_LEN.W))
+  val Branch_Src  = Input(UInt(BRANCH_SRC_SIG_LEN.W))
+  val Mem_Read    = Input(UInt(MEM_READ_SIG_LEN.W))
+  val Mem_Write   = Input(UInt(MEM_WRITE_SIG_LEN.W))
+  val Data_Size   = Input(UInt(DATA_SIZE_SIG_LEN.W))
+  val Load_Type   = Input(UInt(LOAD_TYPE_SIG_LEN.W))
+  val Mem_to_Reg  = Input(UInt(REG_SRC_SIG_LEN.W))
+  val Jump_Type   = Input(UInt(JUMP_TYPE_SIG_LEN.W))
+
+  val id_Reg_Write   = Output(UInt(REGWRITE_SIG_LEN.W))
+  val id_ALU_Src     = Output(UInt(ALU_SRC_SIG_LEN.W))
+  val id_ALUOp       = Output(UInt(ALUOP_SIG_LEN.W))
+  val id_Branch      = Output(UInt(BRANCH_SIG_LEN.W))
+  val id_Branch_Src  = Output(UInt(BRANCH_SRC_SIG_LEN.W))
+  val id_Mem_Read    = Output(UInt(MEM_READ_SIG_LEN.W))
+  val id_Mem_Write   = Output(UInt(MEM_WRITE_SIG_LEN.W))
+  val id_Data_Size   = Output(UInt(DATA_SIZE_SIG_LEN.W))
+  val id_Load_Type   = Output(UInt(LOAD_TYPE_SIG_LEN.W))
+  val id_Mem_to_Reg  = Output(UInt(REG_SRC_SIG_LEN.W))
+  val id_Jump_Type   = Output(UInt(JUMP_TYPE_SIG_LEN.W))
+}
+
 class EX_datapathio extends Bundle with Config {
   val ex_rs1_out      = Input(UInt(WLEN.W))
   val ex_rs2_out      = Input(UInt(WLEN.W))
@@ -65,6 +92,7 @@ class WB_datapathio extends Bundle with Config {
 
 class Datapathio extends Bundle with Config {
   val if_datapathio   = new IF_datapathio
+  val id_datapathio   = new ID_datapathio
   val ex_datapathio   = new EX_datapathio
   val mem_datapathio  = new MEM_datapathio
   val wb_datapathio   = new WB_datapathio
@@ -87,6 +115,20 @@ class Datapath extends Module with Config {
   val PC_Src = Mux(io.ex_datapathio.ex_Jump_Type.toBool(), 1.U, io.ex_datapathio.ex_alu_conflag) &
     io.ex_datapathio.ex_Branch
   io.if_datapathio.if_new_pc := Mux(PC_Src.toBool(), ex_branch_addr, PC_4)
+
+  /* ID stage */
+  // Bubble or not
+  io.id_datapathio.id_Reg_Write   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Reg_Write)
+  io.id_datapathio.id_ALU_Src     := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.ALU_Src)
+  io.id_datapathio.id_ALUOp       := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.ALUOp)
+  io.id_datapathio.id_Branch      := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Branch)
+  io.id_datapathio.id_Branch_Src  := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Branch_Src)
+  io.id_datapathio.id_Mem_Read    := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Mem_Read)
+  io.id_datapathio.id_Mem_Write   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Mem_Write)
+  io.id_datapathio.id_Data_Size   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Data_Size)
+  io.id_datapathio.id_Load_Type   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Load_Type)
+  io.id_datapathio.id_Mem_to_Reg  := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Mem_to_Reg)
+  io.id_datapathio.id_Jump_Type   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Jump_Type)
 
   /* EX stage */
   // Forward unit

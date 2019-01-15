@@ -11,6 +11,7 @@
 *              and forward unit
 * 10-01-2019 - Implemented all basic instructions of RV32I, except the OS instructions, up to 38 instructions, without hazard detection
 *              and forward unit
+* 15-01-2019 - Resolve data hazards that using forward unit and hazard detection unit for stalling. But haven't resolved control hazards yet
 * */
 
 package riscv_mini_five_stage
@@ -19,8 +20,6 @@ import chisel3._
 
 class Tile extends Module with Config {
   val io = IO(new Bundle {
-    val pc_write    = Input(UInt(PC_SIG_LEN.W))
-    val if_id_write = Input(UInt(IF_ID_WRITE_SIG_LEN.W))
     val if_flush    = Input(UInt(IF_FLUSH_SIG_LEN.W))
 
     /* Monitor Output */
@@ -48,19 +47,20 @@ class Tile extends Module with Config {
     val MemWrite_Src      = Output(UInt(MEMWRITE_SRC_SIG_LEN.W))
   })
 
-  val pc              = Module(new PC)
-  val instcache       = Module(new InstCache)
-  val if_id_register  = Module(new IF_ID_Register)
-  val regfile         = Module(new RegFile)
-  val immgen          = Module(new ImmGen)
-  val control         = Module(new Control)
-  val id_ex_register  = Module(new ID_EX_Register)
-  val alu             = Module(new ALU)
-  val datapath        = Module(new Datapath)
-  val ex_mem_register = Module(new EX_MEM_Register)
-  val datacache       = Module(new DataCache)
-  val mem_wb_register = Module(new MEM_WB_Register)
-  val forward         = Module(new Forward)
+  val pc                = Module(new PC)
+  val instcache         = Module(new InstCache)
+  val if_id_register    = Module(new IF_ID_Register)
+  val regfile           = Module(new RegFile)
+  val immgen            = Module(new ImmGen)
+  val control           = Module(new Control)
+  val id_ex_register    = Module(new ID_EX_Register)
+  val alu               = Module(new ALU)
+  val datapath          = Module(new Datapath)
+  val ex_mem_register   = Module(new EX_MEM_Register)
+  val datacache         = Module(new DataCache)
+  val mem_wb_register   = Module(new MEM_WB_Register)
+  val forward           = Module(new Forward)
+  val hazard_detection  = Module(new Hazard_Detection)
 
   /* IF stage */
   // generate next PC address
@@ -68,7 +68,7 @@ class Tile extends Module with Config {
 
   // PC
   pc.io.addr_input := datapath.io.if_datapathio.if_new_pc
-  pc.io.pc_write   := io.pc_write
+  pc.io.pc_write   := hazard_detection.io.PC_Write
 
   // Instruction cache
   instcache.io.addr := pc.io.pc_out
@@ -79,7 +79,7 @@ class Tile extends Module with Config {
   //monitor -------------------------
 
   /* IF/ID pipeline register */
-  if_id_register.io.if_id_write := io.if_id_write
+  if_id_register.io.if_id_write := hazard_detection.io.IF_ID_Write
   if_id_register.io.if_flush    := io.if_flush
   if_id_register.io.if_inst     := instcache.io.inst
   if_id_register.io.if_pc       := pc.io.pc_out
@@ -88,6 +88,27 @@ class Tile extends Module with Config {
   /* ID stage */
   // Main control unit
   control.io.inst     := if_id_register.io.id_inst
+
+  // Hazard detect unit
+  hazard_detection.io.rs1         := if_id_register.io.id_rs1
+  hazard_detection.io.rs2         := if_id_register.io.id_rs2
+  hazard_detection.io.ex_rd       := id_ex_register.io.ex_rd
+  hazard_detection.io.ex_Mem_Read := id_ex_register.io.ex_Mem_Read
+  hazard_detection.io.Imm_Sel     := control.io.Imm_Sel
+
+  // Bubble unit
+  datapath.io.id_datapathio.Bubble        := hazard_detection.io.Bubble
+  datapath.io.id_datapathio.Reg_Write     := control.io.Reg_Write
+  datapath.io.id_datapathio.ALU_Src       := control.io.ALU_Src
+  datapath.io.id_datapathio.ALUOp         := control.io.ALUOp
+  datapath.io.id_datapathio.Branch        := control.io.Branch
+  datapath.io.id_datapathio.Branch_Src    := control.io.Branch_Src
+  datapath.io.id_datapathio.Mem_Read      := control.io.Mem_Read
+  datapath.io.id_datapathio.Mem_Write     := control.io.Mem_Write
+  datapath.io.id_datapathio.Data_Size     := control.io.Data_Size
+  datapath.io.id_datapathio.Load_Type     := control.io.Load_Type
+  datapath.io.id_datapathio.Mem_to_Reg    := control.io.Mem_to_Reg
+  datapath.io.id_datapathio.Jump_Type     := control.io.Jump_Type
 
   // Register file
   regfile.io.rs1      := if_id_register.io.id_rs1
@@ -109,17 +130,17 @@ class Tile extends Module with Config {
 
   /* ID/EX pipeline register */
   // control signals
-  id_ex_register.io.ALU_Src     := control.io.ALU_Src
-  id_ex_register.io.ALUOp       := control.io.ALUOp
-  id_ex_register.io.Branch      := control.io.Branch
-  id_ex_register.io.Branch_Src  := control.io.Branch_Src
-  id_ex_register.io.Jump_Type   := control.io.Jump_Type
-  id_ex_register.io.Mem_Read    := control.io.Mem_Read
-  id_ex_register.io.Mem_Write   := control.io.Mem_Write
-  id_ex_register.io.Data_Size   := control.io.Data_Size
-  id_ex_register.io.Load_Type   := control.io.Load_Type
-  id_ex_register.io.Reg_Write   := control.io.Reg_Write
-  id_ex_register.io.Mem_to_Reg  := control.io.Mem_to_Reg
+  id_ex_register.io.ALU_Src     := datapath.io.id_datapathio.id_ALU_Src
+  id_ex_register.io.ALUOp       := datapath.io.id_datapathio.id_ALUOp
+  id_ex_register.io.Branch      := datapath.io.id_datapathio.id_Branch
+  id_ex_register.io.Branch_Src  := datapath.io.id_datapathio.id_Branch_Src
+  id_ex_register.io.Jump_Type   := datapath.io.id_datapathio.id_Jump_Type
+  id_ex_register.io.Mem_Read    := datapath.io.id_datapathio.id_Mem_Read
+  id_ex_register.io.Mem_Write   := datapath.io.id_datapathio.id_Mem_Write
+  id_ex_register.io.Data_Size   := datapath.io.id_datapathio.id_Data_Size
+  id_ex_register.io.Load_Type   := datapath.io.id_datapathio.id_Load_Type
+  id_ex_register.io.Reg_Write   := datapath.io.id_datapathio.id_Reg_Write
+  id_ex_register.io.Mem_to_Reg  := datapath.io.id_datapathio.id_Mem_to_Reg
 
   // data
   id_ex_register.io.id_rs1_out := regfile.io.rs1_out
