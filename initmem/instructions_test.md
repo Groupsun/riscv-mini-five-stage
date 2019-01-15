@@ -83,11 +83,21 @@ AUIPC x7, 0xC2B
 ### RAW dependence test
 
 ```
+ADDI x1, x0, 0x01
+ADDI x2, x0, 0x02
+ADDI x3, x0, 0x03
 ADD x1, x1, x2
 ADD x2, x1, x3
 ADD x3, x1, x2
 ADD x4, x1, x3
 ```
+
+The correct status after running this program is:
+
+- x1 = 0x03
+- x2 = 0x06
+- x3 = 0x09
+- x4 = 0x0C
 
 ### simple program 1
 
@@ -105,7 +115,7 @@ void f()
 The assembly code represented by RV32I such as:
 
 ```
-; x1 as the sp register, which indecate the address of array a
+; x1 as the sp register, which indicate the address of array a
 ; x2 as the indicator i
 ; x3 as the upper bound 5
 

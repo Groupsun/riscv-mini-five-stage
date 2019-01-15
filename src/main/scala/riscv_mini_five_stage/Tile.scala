@@ -144,7 +144,12 @@ class Tile extends Module with Config {
   datapath.io.ex_datapathio.ex_Jump_Type    := id_ex_register.io.ex_Jump_Type
 
   // Forward
-  datapath.io.ex_datapathio.mem_alu_sum     := ex_mem_register.io.mem_alu_sum
+  datapath.io.mem_datapathio.mem_alu_sum    := ex_mem_register.io.mem_alu_sum
+  datapath.io.mem_datapathio.mem_pc_4       := ex_mem_register.io.mem_pc_4
+  datapath.io.mem_datapathio.mem_imm        := ex_mem_register.io.mem_imm
+  datapath.io.mem_datapathio.mem_aui_pc     := ex_mem_register.io.mem_aui_pc
+  datapath.io.mem_datapathio.mem_Mem_to_Reg := ex_mem_register.io.mem_Mem_to_Reg
+
   datapath.io.ex_datapathio.Forward_A       := forward.io.Forward_A
   datapath.io.ex_datapathio.Forward_B       := forward.io.Forward_B
 

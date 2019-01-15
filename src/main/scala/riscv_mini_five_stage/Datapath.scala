@@ -31,7 +31,6 @@ class EX_datapathio extends Bundle with Config {
   val ex_Jump_Type    = Input(UInt(JUMP_TYPE_SIG_LEN.W))
 
   // Forward unit
-  val mem_alu_sum     = Input(UInt(WLEN.W))
   val Forward_A       = Input(UInt(FORWARD_A_SIG_LEN.W))
   val Forward_B       = Input(UInt(FORWARD_B_SIG_LEN.W))
 
@@ -45,6 +44,11 @@ class EX_datapathio extends Bundle with Config {
 class MEM_datapathio extends Bundle with Config {
   val mem_rs2_out           = Input(UInt(WLEN.W))
   val MemWrite_Src          = Input(UInt(MEMWRITE_SRC_SIG_LEN.W))
+  val mem_Mem_to_Reg        = Input(UInt(REG_SRC_SIG_LEN.W))
+  val mem_alu_sum           = Input(UInt(WLEN.W))
+  val mem_pc_4              = Input(UInt(WLEN.W))
+  val mem_imm               = Input(UInt(WLEN.W))
+  val mem_aui_pc            = Input(UInt(WLEN.W))
 
   val mem_writedata         = Output(UInt(WLEN.W))
 }
@@ -86,18 +90,25 @@ class Datapath extends Module with Config {
 
   /* EX stage */
   // Forward unit
+  val mem_forward_value = MuxLookup(io.mem_datapathio.mem_Mem_to_Reg, RegWrite_XXX, Seq(
+    RegWrite_ALU  -> io.mem_datapathio.mem_alu_sum,
+    RegWrite_PC_4 -> io.mem_datapathio.mem_pc_4,
+    RegWrite_imm  -> io.mem_datapathio.mem_imm,
+    RegWrite_ipc  -> io.mem_datapathio.mem_aui_pc
+  ))
+
   io.ex_datapathio.alu_a_src := MuxLookup(io.ex_datapathio.Forward_A,
     io.ex_datapathio.ex_rs1_out, Seq(
       Forward_A_rs1       -> io.ex_datapathio.ex_rs1_out,
       Forward_A_mem_wb_rd -> io.wb_datapathio.wb_reg_writedata,
-      Forward_A_ex_mem_rd -> io.ex_datapathio.mem_alu_sum
+      Forward_A_ex_mem_rd -> mem_forward_value
     ))
 
   val operand_b = MuxLookup(io.ex_datapathio.Forward_B,
     io.ex_datapathio.ex_rs2_out, Seq(
       Forward_B_rs1       -> io.ex_datapathio.ex_rs2_out,
       Forward_B_mem_wb_rd -> io.wb_datapathio.wb_reg_writedata,
-      Forward_B_ex_mem_rd -> io.ex_datapathio.mem_alu_sum
+      Forward_B_ex_mem_rd -> mem_forward_value
     ))
 
   // select ALU oprand B source
