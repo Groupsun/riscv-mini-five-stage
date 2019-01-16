@@ -25,7 +25,6 @@ trait Config {
   // control signal's width
   val PC_WRITE_SIG_LEN      = 1
   val IF_ID_WRITE_SIG_LEN   = 1
-  val IF_FLUSH_SIG_LEN      = 1
   val REGWRITE_SIG_LEN      = 1
   val IMM_SEL_SIG_LEN       = 3
   val ALU_SRC_SIG_LEN       = 1
@@ -44,4 +43,8 @@ trait Config {
   val JUMP_TYPE_SIG_LEN     = 1
   val MEMWRITE_SRC_SIG_LEN  = 1
   val BUBBLE_SIG_LEN        = 1
+  val PC_SEL_SIG_LEN        = 2
+  val IF_ID_FLUSH_SIG_LEN   = 1
+  val ID_EX_FLUSH_SIG_LEN   = 1
+  val ADDR_BUFFER_FLUSH_LEN = 1
 }

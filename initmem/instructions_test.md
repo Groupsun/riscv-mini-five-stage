@@ -163,3 +163,17 @@ The program above contains data hazards:
 - x3: between ADDI and ADD(write x4 and x5)
 
 The first and third data hazards could resolve by forward, the second data hazard must stall a cycle and then resolve by forward
+
+
+```
+NOP
+ADDI x1, x0, 0x04
+ADDI x2, x0, 0x08
+JALR x3, x0, 0x14
+ADDI x1, x1, 0x01
+BLT  x1, x2, 0x-02
+ADDI x1, x1, 0x1C
+ADDI x2, x2, 0x1E
+NOP
+NOP
+```

@@ -14,7 +14,7 @@ class IF_ID_Registerio extends Bundle with Config {
   val if_pc       = Input(UInt(WLEN.W))
   val if_inst     = Input(UInt(WLEN.W))
   val if_id_write = Input(UInt(IF_ID_WRITE_SIG_LEN.W))
-  val if_flush    = Input(UInt(IF_FLUSH_SIG_LEN.W))
+  val if_flush    = Input(UInt(IF_ID_FLUSH_SIG_LEN.W))
   val if_pc_4     = Input(UInt(WLEN.W))
   val id_rs1      = Output(UInt(REG_LEN.W))
   val id_rs2      = Output(UInt(REG_LEN.W))

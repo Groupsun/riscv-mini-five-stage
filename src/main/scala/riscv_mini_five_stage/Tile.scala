@@ -20,8 +20,6 @@ import chisel3._
 
 class Tile extends Module with Config {
   val io = IO(new Bundle {
-    val if_flush    = Input(UInt(IF_FLUSH_SIG_LEN.W))
-
     /* Monitor Output */
     val if_pc_out         = Output(UInt(WLEN.W))
     val if_next_pc        = Output(UInt(WLEN.W))
@@ -61,14 +59,18 @@ class Tile extends Module with Config {
   val mem_wb_register   = Module(new MEM_WB_Register)
   val forward           = Module(new Forward)
   val hazard_detection  = Module(new Hazard_Detection)
+  val branch_predict    = Module(new Branch_Predict)
 
   /* IF stage */
   // generate next PC address
   datapath.io.if_datapathio.if_pc             := pc.io.pc_out
+  datapath.io.if_datapathio.new_addr          := branch_predict.io.new_addr
+  datapath.io.if_datapathio.PC_Sel            := branch_predict.io.PC_Sel
+  datapath.io.if_datapathio.pc_recover        := branch_predict.io.pc_recover
 
   // PC
   pc.io.addr_input := datapath.io.if_datapathio.if_new_pc
-  pc.io.pc_write   := hazard_detection.io.PC_Write
+  pc.io.pc_write   := hazard_detection.io.PC_Write.toBool()
 
   // Instruction cache
   instcache.io.addr := pc.io.pc_out
@@ -80,7 +82,7 @@ class Tile extends Module with Config {
 
   /* IF/ID pipeline register */
   if_id_register.io.if_id_write := hazard_detection.io.IF_ID_Write
-  if_id_register.io.if_flush    := io.if_flush
+  if_id_register.io.if_flush    := branch_predict.io.IF_ID_Flush
   if_id_register.io.if_inst     := instcache.io.inst
   if_id_register.io.if_pc       := pc.io.pc_out
   if_id_register.io.if_pc_4     := datapath.io.if_datapathio.if_pc_4
@@ -130,6 +132,7 @@ class Tile extends Module with Config {
 
   /* ID/EX pipeline register */
   // control signals
+  id_ex_register.io.ID_EX_Flush := branch_predict.io.ID_EX_Flush
   id_ex_register.io.ALU_Src     := datapath.io.id_datapathio.id_ALU_Src
   id_ex_register.io.ALUOp       := datapath.io.id_datapathio.id_ALUOp
   id_ex_register.io.Branch      := datapath.io.id_datapathio.id_Branch
@@ -259,10 +262,19 @@ class Tile extends Module with Config {
   forward.io.ex_mem_rs2       := ex_mem_register.io.mem_rs2
   forward.io.ex_mem_Mem_Write := ex_mem_register.io.mem_Mem_Write
 
+  /* Branch predict unit */
+  branch_predict.io.inst          := instcache.io.inst
+  branch_predict.io.branch_addr   := datapath.io.ex_datapathio.branch_addr
+  branch_predict.io.PC_Src        := datapath.io.ex_datapathio.PC_Src
+  branch_predict.io.pc            := pc.io.pc_out
+  branch_predict.io.ex_Branch     := id_ex_register.io.ex_Branch
+  branch_predict.io.ex_Jump_Type  := id_ex_register.io.ex_Jump_Type
+
   /* output test */
   io.Forward_A    := forward.io.Forward_A
   io.Forward_B    := forward.io.Forward_B
   io.MemWrite_Src := forward.io.MemWrite_Src
+
 }
 
 object Tile extends App {

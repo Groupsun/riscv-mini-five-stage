@@ -11,14 +11,15 @@ package riscv_mini_five_stage
 import chisel3._
 
 class ID_EX_Registerio extends Bundle with Config {
-  val id_pc      = Input(UInt(WLEN.W))
-  val id_pc_4    = Input(UInt(WLEN.W))
-  val id_rs1_out = Input(UInt(WLEN.W))
-  val id_rs2_out = Input(UInt(WLEN.W))
-  val id_imm     = Input(UInt(WLEN.W))
-  val id_inst    = Input(UInt(WLEN.W))
-  val id_rs1     = Input(UInt(REG_LEN.W))
-  val id_rs2     = Input(UInt(REG_LEN.W))
+  val id_pc       = Input(UInt(WLEN.W))
+  val id_pc_4     = Input(UInt(WLEN.W))
+  val id_rs1_out  = Input(UInt(WLEN.W))
+  val id_rs2_out  = Input(UInt(WLEN.W))
+  val id_imm      = Input(UInt(WLEN.W))
+  val id_inst     = Input(UInt(WLEN.W))
+  val id_rs1      = Input(UInt(REG_LEN.W))
+  val id_rs2      = Input(UInt(REG_LEN.W))
+  val ID_EX_Flush = Input(UInt(ID_EX_FLUSH_SIG_LEN.W))
 
   /* control signals */
   // EX stage
@@ -88,25 +89,25 @@ class ID_EX_Register extends Module with Config {
   val mem_to_reg  = RegInit(0.U(REG_SRC_SIG_LEN.W))
 
   // apply regs
-  pc                := io.id_pc
-  pc_4              := io.id_pc_4
-  rs1_out           := io.id_rs1_out
-  rs2_out           := io.id_rs2_out
-  imm               := io.id_imm
-  inst              := io.id_inst
-  rs1               := io.id_rs1
-  rs2               := io.id_rs2
-  alu_src           := io.ALU_Src
-  aluop             := io.ALUOp
-  branch            := io.Branch
-  branch_src        := io.Branch_Src
-  jump_type         := io.Jump_Type
-  mem_read          := io.Mem_Read
-  mem_write         := io.Mem_Write
-  data_size         := io.Data_Size
-  load_type         := io.Load_Type
-  reg_write         := io.Reg_Write
-  mem_to_reg        := io.Mem_to_Reg
+  pc                := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_pc)
+  pc_4              := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_pc_4)
+  rs1_out           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs1_out)
+  rs2_out           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs2_out)
+  imm               := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_imm)
+  inst              := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_inst)
+  rs1               := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs1)
+  rs2               := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs2)
+  alu_src           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.ALU_Src)
+  aluop             := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.ALUOp)
+  branch            := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Branch)
+  branch_src        := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Branch_Src)
+  jump_type         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Jump_Type)
+  mem_read          := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Mem_Read)
+  mem_write         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Mem_Write)
+  data_size         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Data_Size)
+  load_type         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Load_Type)
+  reg_write         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Reg_Write)
+  mem_to_reg        := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Mem_to_Reg)
 
   // output
   io.ex_ALU_Src     := alu_src

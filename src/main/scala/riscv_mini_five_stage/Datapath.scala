@@ -12,9 +12,14 @@ import chisel3._
 import chisel3.util.MuxLookup
 import Control._
 import Forward._
+import Branch_Predict_Signal._
 
 class IF_datapathio extends Bundle with Config {
   val if_pc             = Input(UInt(WLEN.W))
+  val PC_Sel            = Input(UInt(PC_SEL_SIG_LEN.W))
+  val new_addr          = Input(UInt(WLEN.W))
+  val pc_recover        = Input(UInt(WLEN.W))
+
   val if_new_pc         = Output(UInt(WLEN.W))
   val if_pc_4           = Output(UInt(WLEN.W))
 }
@@ -66,6 +71,9 @@ class EX_datapathio extends Bundle with Config {
   val forward_rs2_out   = Output(UInt(WLEN.W))
 
   val alu_a_src         = Output(UInt(WLEN.W))
+
+  val PC_Src            = Output(UInt(PC_SRC_SIG_LEN.W))
+  val branch_addr       = Output(UInt(WLEN.W))
 }
 
 class MEM_datapathio extends Bundle with Config {
@@ -110,11 +118,17 @@ class Datapath extends Module with Config {
   val ex_branch_addr = Mux(io.ex_datapathio.ex_Branch_Src.toBool(), io.ex_datapathio.alu_a_src, io.ex_datapathio.ex_pc) +
     io.ex_datapathio.ex_imm.asUInt()
   io.ex_datapathio.ex_aui_pc := ex_branch_addr
+  io.ex_datapathio.branch_addr := ex_branch_addr
 
   // generate next PC
-  val PC_Src = Mux(io.ex_datapathio.ex_Jump_Type.toBool(), 1.U, io.ex_datapathio.ex_alu_conflag) &
-    io.ex_datapathio.ex_Branch
-  io.if_datapathio.if_new_pc := Mux(PC_Src.toBool(), ex_branch_addr, PC_4)
+  val PC_Src = Mux(io.ex_datapathio.ex_Jump_Type.toBool(), 1.U, io.ex_datapathio.ex_alu_conflag).toBool() &&
+    io.ex_datapathio.ex_Branch.toBool()
+  io.ex_datapathio.PC_Src := PC_Src
+  io.if_datapathio.if_new_pc := MuxLookup(io.if_datapathio.PC_Sel, PC_4, Seq(
+    PC_Sel_PC_4     -> PC_4,
+    PC_Sel_new_addr -> io.if_datapathio.new_addr,
+    PC_Sel_recover  -> io.if_datapathio.pc_recover
+  ))
 
   /* ID stage */
   // Bubble or not

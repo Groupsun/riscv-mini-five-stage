@@ -9,8 +9,6 @@ import org.scalatest.{FlatSpec, Matchers}
 class Tile_Test(c: Tile) extends PeekPokeTester(c) {
   for(i <- 0 to 200) {
     // Input
-    poke(c.io.if_flush, 0)
-
     peek(c.io.if_pc_out)
     peek(c.io.if_next_pc)
     peek(c.io.id_rs1)
