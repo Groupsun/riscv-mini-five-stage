@@ -16,7 +16,7 @@ trait Config {
   val BLEN           = 8
   val HLEN           = 16
   val WLEN           = 32
-  val INST_CACHE_LEN = 128
+  val INST_CACHE_LEN = 256
   val REG_LEN        = 5
   val REGFILE_LEN    = 32
   val OPCODE_LEN     = 7

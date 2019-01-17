@@ -61,8 +61,8 @@ class Hazard_Detection extends Module with Config {
   *  as the store source register 2)
   * */
   val rs2_con = io.ex_Mem_Read.toBool() &&
-                io.Imm_Sel === IMM_R    &&
-                io.Imm_Sel === IMM_SB   &&
+                (io.Imm_Sel === IMM_R    ||
+                io.Imm_Sel === IMM_SB)   &&
                 io.rs2 === io.ex_rd
 
   val stall_con = rs1_con || rs2_con
