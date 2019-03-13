@@ -37,6 +37,7 @@ class ID_datapathio extends Bundle with Config {
   val Load_Type   = Input(UInt(LOAD_TYPE_SIG_LEN.W))
   val Mem_to_Reg  = Input(UInt(REG_SRC_SIG_LEN.W))
   val Jump_Type   = Input(UInt(JUMP_TYPE_SIG_LEN.W))
+  val Imm_Sel     = Input(UInt(IMM_SEL_SIG_LEN.W))
 
   val id_Reg_Write   = Output(UInt(REGWRITE_SIG_LEN.W))
   val id_ALU_Src     = Output(UInt(ALU_SRC_SIG_LEN.W))
@@ -49,6 +50,7 @@ class ID_datapathio extends Bundle with Config {
   val id_Load_Type   = Output(UInt(LOAD_TYPE_SIG_LEN.W))
   val id_Mem_to_Reg  = Output(UInt(REG_SRC_SIG_LEN.W))
   val id_Jump_Type   = Output(UInt(JUMP_TYPE_SIG_LEN.W))
+  val id_Imm_Sel     = Output(UInt(IMM_SEL_SIG_LEN.W))
 }
 
 class EX_datapathio extends Bundle with Config {
@@ -61,6 +63,7 @@ class EX_datapathio extends Bundle with Config {
   val ex_alu_conflag  = Input(UInt(CONFLAG_SIGLEN.W))
   val ex_Branch_Src   = Input(UInt(BRANCH_SRC_SIG_LEN.W))
   val ex_Jump_Type    = Input(UInt(JUMP_TYPE_SIG_LEN.W))
+  val ex_Imm_Sel      = Input(UInt(IMM_SEL_SIG_LEN.W))
 
   // Forward unit
   val Forward_A       = Input(UInt(FORWARD_A_SIG_LEN.W))
@@ -111,13 +114,16 @@ class Datapath extends Module with Config {
 
   /* IF stage */
   // generate increment PC
+  // Condition: is JALR
+  val is_JALR = (io.ex_datapathio.ex_Imm_Sel === IMM_I && io.ex_datapathio.ex_Jump_Type === NonConditional)
+
   val PC_4 = io.if_datapathio.if_pc + 4.U
   io.if_datapathio.if_pc_4 := PC_4
 
   // calculate branch address
-  val ex_branch_addr = Mux(io.ex_datapathio.ex_Branch_Src.toBool(), io.ex_datapathio.alu_a_src, io.ex_datapathio.ex_pc) +
-    io.ex_datapathio.ex_imm.asUInt()
-  io.ex_datapathio.ex_aui_pc := ex_branch_addr
+  val shift_imm = Mux(is_JALR, io.ex_datapathio.ex_imm, io.ex_datapathio.ex_imm << 1.U)
+  val ex_branch_addr = Mux(io.ex_datapathio.ex_Branch_Src.toBool(), io.ex_datapathio.alu_a_src, io.ex_datapathio.ex_pc) + shift_imm.asUInt()
+  io.ex_datapathio.ex_aui_pc := Mux(io.ex_datapathio.ex_Branch_Src.toBool(), io.ex_datapathio.alu_a_src, io.ex_datapathio.ex_pc) + io.ex_datapathio.ex_imm
   io.ex_datapathio.branch_addr := ex_branch_addr
 
   // generate next PC
@@ -143,6 +149,7 @@ class Datapath extends Module with Config {
   io.id_datapathio.id_Load_Type   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Load_Type)
   io.id_datapathio.id_Mem_to_Reg  := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Mem_to_Reg)
   io.id_datapathio.id_Jump_Type   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Jump_Type)
+  io.id_datapathio.id_Imm_Sel     := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Imm_Sel)
 
   /* EX stage */
   // Forward unit

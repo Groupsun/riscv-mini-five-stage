@@ -4,10 +4,10 @@ Here are some sample programs that could test some instructions of the processor
 ### simple test
 
 ```
-SW	x2, 0x06(x1)	
-SW	x3, 0x0A(x1)	
+SW	x2, x1, 0x06	
+SW	x3, x1, 0x06	
 ADD	x3, x1, x2	
-LW	x6, 0x06(x1)	
+LW	x6, x1, 0x06	
 BEQ	x4, x5, 0x12
 ```
 
@@ -53,26 +53,32 @@ SB    x22, x3, 0x08
 ### Load instructions
 
 ```
-LW    x10, x0, 0x14
-LHU   x11, x0, 0x18
-LBU   x12, x0, 0x1C
-LH    x13, x0, 0x14
-LB    x14, x0, 0x18
+ADDI x1, x0, 0x123
+ADDI x2, x0, 0xffe
+SW   x1, x0, 0x04
+SW   x2, x0, 0x08
+LW   x3, x0, 0x04
+LH   x4, x0, 0x04
+LB   x5, x0, 0x04
+LH   x6, x0, 0x08
+LB   x7, x0, 0x08
+LHU  x8, x0, 0x08
+LBU  x9, x0, 0x08
 ```
 
 ### Jump and link instructions
 
 ```
-JALR x6, x1, 0x0E
+JALR x6, x1, 0x14
 NOP
 NOP
 NOP
 NOP
-ADD x7, x1, x2
+ADD x7, x1, x6
 ```
 
 ```
-JAL  x6, 0x0A
+JAL  x6, 0x05
 NOP
 NOP
 NOP
@@ -124,7 +130,7 @@ ADDI x3, x0, 0x05
 ADDI x2, x2, 0x01
 SW   x2, x1, 0x00
 ADDI x1, x1, 0x04
-BLT  x2, x3, 0x-06
+BLT  x2, x3, 0x-03
 NOP
 NOP
 ```
@@ -170,10 +176,10 @@ The first and third data hazards could resolve by forward, the second data hazar
 NOP
 ADDI x1, x0, 0x04
 ADDI x2, x0, 0x08
-BLT  x1, x2, 0x08
+BLT  x1, x2, 0x04
 ADDI x1, x1, 0x01
-BLT  x1, x2, 0x-04
-BGE  x1, x2, 0x04
+BLT  x1, x2, 0x-02
+BGE  x1, x2, 0x02
 JALR x3, x0, 0x10
 ADDI x1, x1, 0x01F
 ADDI x2, x2, 0x0ED
@@ -189,7 +195,7 @@ ADDI x1, x0, 0x04
 ADDI x2, x0, 0x08
 JALR x3, x0, 0x14
 ADDI x1, x1, 0x01
-BLT  x1, x2, 0x-02
+BLT  x1, x2, 0x-01
 ADDI x1, x1, 0x1F
 ADDI x2, x2, 0x2E
 NOP
@@ -254,22 +260,22 @@ ADDI    x11, x0, 0x00
 ADD     x8, x0, x3
 ADD     x8, x8, x3
 ADDI    x11, x11, 0x01
-BLT     x11, x10, 0x-04
+BLT     x11, x10, 0x-02
 ADDI    x9, x8, 0x-04
 ADD     x8, x8, x1
 ADD     x9, x9, x1
 LW      x5, x8, 0x00
 LW      x6, x9, 0x00
-BGE     x5, x6, 0x08
+BGE     x5, x6, 0x04
 ADD     x4, x0, x5
 ADD     x5, x0, x6
 ADD     x6, x0, x4
 SW      x5, x8, 0x00
 SW      x6, x9, 0x00
 ADDI    x3, x3, 0x-01
-BGE     x3, x7, 0x-22
+BGE     x3, x7, 0x-11
 ADDI    x2, x2, 0x01
-BLT     x2, x12, 0x-28
+BLT     x2, x12, 0x-14
 NOP
 NOP
 ```

@@ -105,7 +105,8 @@ class Branch_Predict extends Module with Config {
     Weak_Taken      -> PC_Sel_new_addr,
     Strong_Taken    -> PC_Sel_new_addr
   ))
-  val predict_addr = (io.pc.asSInt() + Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8), 0.U(1.W)).asSInt()).asUInt()
+
+  val predict_addr = (io.pc.asSInt() + Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8), 0.U(2.W)).asSInt()).asUInt()
 
   val con_PC_Sel = Mux(predict_fail,
     Mux(need_recover_pc, PC_Sel_recover, PC_Sel_new_addr),

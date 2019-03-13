@@ -19,21 +19,21 @@ ADDI    x11, x0, 0x00
 ADD     x8, x0, x3
 ADD     x8, x8, x3
 ADDI    x11, x11, 0x01
-BLT     x11, x10, 0x-04
+BLT     x11, x10, 0x-02
 ADDI    x9, x8, 0x-04
 ADD     x8, x8, x1
 ADD     x9, x9, x1
 LW      x5, x8, 0x00
 LW      x6, x9, 0x00
-BGE     x5, x6, 0x08
+BGE     x5, x6, 0x04
 ADD     x4, x0, x5
 ADD     x5, x0, x6
 ADD     x6, x0, x4
 SW      x5, x8, 0x00
 SW      x6, x9, 0x00
 ADDI    x3, x3, 0x-01
-BGE     x3, x7, 0x-22
+BGE     x3, x7, 0x-11
 ADDI    x2, x2, 0x01
-BLT     x2, x12, 0x-28
+BLT     x2, x12, 0x-14
 NOP
 NOP

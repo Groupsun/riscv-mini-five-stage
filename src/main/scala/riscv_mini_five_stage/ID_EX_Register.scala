@@ -28,6 +28,7 @@ class ID_EX_Registerio extends Bundle with Config {
   val Branch     = Input(UInt(BRANCH_SIG_LEN.W))
   val Branch_Src = Input(UInt(BRANCH_SRC_SIG_LEN.W))
   val Jump_Type  = Input(UInt(JUMP_TYPE_SIG_LEN.W))
+  val Imm_Sel    = Input(UInt(IMM_SEL_SIG_LEN.W))
 
   // MEM stage
   val Mem_Read   = Input(UInt(MEM_READ_SIG_LEN.W))
@@ -46,6 +47,7 @@ class ID_EX_Registerio extends Bundle with Config {
   val ex_Branch     = Output(UInt(BRANCH_SIG_LEN.W))
   val ex_Branch_Src = Output(UInt(BRANCH_SRC_SIG_LEN.W))
   val ex_Jump_Type  = Output(UInt(JUMP_TYPE_SIG_LEN.W))
+  val ex_Imm_Sel    = Output(UInt(IMM_SEL_SIG_LEN.W))
   val ex_Mem_Read   = Output(UInt(MEM_READ_SIG_LEN.W))
   val ex_Mem_Write  = Output(UInt(MEM_WRITE_SIG_LEN.W))
   val ex_Data_Size  = Output(UInt(DATA_SIZE_SIG_LEN.W))
@@ -87,6 +89,7 @@ class ID_EX_Register extends Module with Config {
   val load_type   = RegInit(0.U(LOAD_TYPE_SIG_LEN.W))
   val reg_write   = RegInit(0.U(REGWRITE_SIG_LEN.W))
   val mem_to_reg  = RegInit(0.U(REG_SRC_SIG_LEN.W))
+  val imm_sel     = RegInit(0.U(IMM_SEL_SIG_LEN.W))
 
   // apply regs
   pc                := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_pc)
@@ -108,6 +111,7 @@ class ID_EX_Register extends Module with Config {
   load_type         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Load_Type)
   reg_write         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Reg_Write)
   mem_to_reg        := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Mem_to_Reg)
+  imm_sel           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Imm_Sel)
 
   // output
   io.ex_ALU_Src     := alu_src
@@ -130,6 +134,7 @@ class ID_EX_Register extends Module with Config {
   io.ex_imm         := imm
   io.ex_inst        := inst
   io.ex_rd          := inst(11, 7)
+  io.ex_Imm_Sel     := imm_sel
 }
 
 object ID_EX_Register extends App {

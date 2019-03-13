@@ -111,6 +111,7 @@ class Tile extends Module with Config {
   datapath.io.id_datapathio.Load_Type     := control.io.Load_Type
   datapath.io.id_datapathio.Mem_to_Reg    := control.io.Mem_to_Reg
   datapath.io.id_datapathio.Jump_Type     := control.io.Jump_Type
+  datapath.io.id_datapathio.Imm_Sel       := control.io.Imm_Sel
 
   // Register file
   regfile.io.rs1      := if_id_register.io.id_rs1
@@ -144,6 +145,7 @@ class Tile extends Module with Config {
   id_ex_register.io.Load_Type   := datapath.io.id_datapathio.id_Load_Type
   id_ex_register.io.Reg_Write   := datapath.io.id_datapathio.id_Reg_Write
   id_ex_register.io.Mem_to_Reg  := datapath.io.id_datapathio.id_Mem_to_Reg
+  id_ex_register.io.Imm_Sel     := datapath.io.id_datapathio.id_Imm_Sel
 
   // data
   id_ex_register.io.id_rs1_out := regfile.io.rs1_out
@@ -166,6 +168,7 @@ class Tile extends Module with Config {
   datapath.io.ex_datapathio.ex_Branch       := id_ex_register.io.ex_Branch
   datapath.io.ex_datapathio.ex_alu_conflag  := alu.io.Conflag
   datapath.io.ex_datapathio.ex_Jump_Type    := id_ex_register.io.ex_Jump_Type
+  datapath.io.ex_datapathio.ex_Imm_Sel      := id_ex_register.io.ex_Imm_Sel
 
   // Forward
   datapath.io.mem_datapathio.mem_alu_sum    := ex_mem_register.io.mem_alu_sum
