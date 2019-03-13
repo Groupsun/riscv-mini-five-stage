@@ -11,6 +11,8 @@ Features:
 - Resolve data hazards using forward and stall
 - Branch predict unit using global 2-bit saturating counter scheme
 
+The processor currently has no interrupt or exception scheme, this feature may be added in the future.
+
 ## Project structure
 
 - src/main/scala/riscv_mini_five_stage: source code of the processor
