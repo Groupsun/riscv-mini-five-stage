@@ -1,5 +1,7 @@
 # RISC-V mini five stage
 
+**This branch contains a simple M-mode interrupt handling scheme**
+
 This is my graduation project of a simple RISC-V 5 stage pipeline processor. I have implemented 38 instructions of the basic RV32I ISA, except the instructions support the operating system.
 
 Instructions include arithmetic and logic instructions, load and store instructions, conditional branch instructions, jump and link instructions and LUI, AUIPC. No operation instruction is also support.
@@ -64,6 +66,14 @@ No operation just type "NOP"
 ```
 
 The output file is initmem/instcache.txt, Hex format. Each line represents a Byte in instruction cache.
+
+## Simple M-mode interrupt handling
+
+The scheme is showed in src/main/scala/riscv_mini_five_stage/CSR.scala
+
+Under the branch pridict scheme, the interrupt handling seems to be very difficult, so I wait till pipeline is stable then enable the interrupt.
+
+But the implementation is not good enough. Also, the implementation may contains a lot of bugs.
 
 [Chinese Version]: ./README_zh.md
 
