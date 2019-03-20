@@ -13,6 +13,7 @@ import Instructions._
 import Control._
 import chisel3.util.{Cat, ListLookup, MuxLookup}
 import Branch_Predict_Signal._
+import CSR._
 
 object Branch_Predict_Signal {
   // PC_Sel
@@ -48,6 +49,10 @@ class Branch_Predictio extends Bundle with Config {
   val pc_recover  = Output(UInt(WLEN.W))
   val IF_ID_Flush = Output(UInt(IF_ID_FLUSH_SIG_LEN.W))
   val ID_EX_Flush = Output(UInt(ID_EX_FLUSH_SIG_LEN.W))
+
+  // Handling exception
+  val is_Exception  = Input(UInt(IS_EXCEPTION_SIG_LEN.W))
+  val is_Waiting_Resolved = Output(UInt(1.W))
 }
 
 class Branch_Predict extends Module with Config {
@@ -57,8 +62,10 @@ class Branch_Predict extends Module with Config {
   val current_inst_ctrl = ListLookup(io.inst, Control.default, Control.map)
 
   val dynamic_counter_status = RegInit(0.U(2.W))
-  val pc_4 = io.pc + 4.U
+  val wait_for_resolving     = RegInit(0.U(1.W))
+  val resolving_processed    = RegInit(0.U(2.W))
 
+  val pc_4 = io.pc + 4.U
 
   /* Conditions */
   val is_nonconditional_jump  = current_inst_ctrl(4).toBool() && (current_inst_ctrl(11) === NonConditional)
@@ -67,43 +74,66 @@ class Branch_Predict extends Module with Config {
   val con_addr_is_resolved    = io.ex_Branch.toBool() && (io.ex_Jump_Type === Conditional)
   val noncon_flush            = noncon_addr_is_resolved
   val need_record_pc_4        = is_conditional_jump && ((dynamic_counter_status === Strong_Taken) || dynamic_counter_status === Weak_Taken)
+
+  val is_a_jump_also_an_exception       = (is_nonconditional_jump || is_conditional_jump) && io.is_Exception === is_Exception_MTVEC
+  val target_resolve_also_an_exception  = (noncon_addr_is_resolved || con_addr_is_resolved) && io.is_Exception === is_Exception_MTVEC
+
+  // update status
+  when(is_nonconditional_jump || is_conditional_jump) {
+    wait_for_resolving := 1.U
+  } .elsewhen(noncon_addr_is_resolved || con_addr_is_resolved) {
+    wait_for_resolving := 0.U
+  } .otherwise {
+    wait_for_resolving := wait_for_resolving
+  }
+
+  when(noncon_addr_is_resolved || con_addr_is_resolved) {
+    resolving_processed := 2.U
+  } .elsewhen(resolving_processed =/= 0.U) {
+    resolving_processed := resolving_processed - 1.U
+  } .otherwise {
+    resolving_processed := 0.U
+  }
+
+  io.is_Waiting_Resolved := Mux(wait_for_resolving === 1.U || resolving_processed =/= 0.U, 1.U, 0.U)
+
   addr_buffer.io.record := need_record_pc_4
   addr_buffer.io.addr_input := pc_4
 
   /* Nonconditional jump */
   val noncon_address = Mux(noncon_addr_is_resolved, io.branch_addr, 0.U)
-  val noncon_PC_Sel  = Mux(noncon_addr_is_resolved, PC_Sel_new_addr, PC_Sel_PC_4)
+  val noncon_PC_Sel = Mux(noncon_addr_is_resolved, PC_Sel_new_addr, PC_Sel_PC_4)
 
   /* Conditional jump */
   val update_status = Mux(con_addr_is_resolved,
     Mux(io.PC_Src.toBool(), MuxLookup(dynamic_counter_status, dynamic_counter_status, Seq(
       Strong_Nottaken -> Weak_Nottaken,
-      Weak_Nottaken   -> Weak_Taken,
-      Weak_Taken      -> Strong_Taken,
-      Strong_Taken    -> Strong_Taken
+      Weak_Nottaken -> Weak_Taken,
+      Weak_Taken -> Strong_Taken,
+      Strong_Taken -> Strong_Taken
     )), MuxLookup(dynamic_counter_status, dynamic_counter_status, Seq(
       Strong_Nottaken -> Strong_Nottaken,
-      Weak_Nottaken   -> Strong_Nottaken,
-      Weak_Taken      -> Weak_Nottaken,
-      Strong_Taken    -> Weak_Taken
+      Weak_Nottaken -> Strong_Nottaken,
+      Weak_Taken -> Weak_Nottaken,
+      Strong_Taken -> Weak_Taken
     ))), dynamic_counter_status
   )
-  dynamic_counter_status := update_status
+  dynamic_counter_status := Mux(is_a_jump_also_an_exception, dynamic_counter_status, update_status)
 
-  val predict_fail            = con_addr_is_resolved && (update_status === Weak_Taken || update_status === Weak_Nottaken)
-  val predict_success         = con_addr_is_resolved && (update_status === Strong_Taken || update_status === Strong_Nottaken)
-  val need_recover_pc         = predict_fail && ((update_status === Weak_Taken && dynamic_counter_status === Strong_Taken) ||
-                                                 (update_status === Weak_Nottaken && dynamic_counter_status === Weak_Taken))
+  val predict_fail = con_addr_is_resolved && (update_status === Weak_Taken || update_status === Weak_Nottaken)
+  val predict_success = con_addr_is_resolved && (update_status === Strong_Taken || update_status === Strong_Nottaken)
+  val need_recover_pc = predict_fail && ((update_status === Weak_Taken && dynamic_counter_status === Strong_Taken) ||
+    (update_status === Weak_Nottaken && dynamic_counter_status === Weak_Taken))
 
-  val flush                   = noncon_flush || predict_fail
+  val flush = noncon_flush || predict_fail
 
   addr_buffer.io.flush := flush
 
   val predict_PC_Sel = MuxLookup(dynamic_counter_status, PC_Sel_PC_4, Seq(
     Strong_Nottaken -> PC_Sel_PC_4,
-    Weak_Nottaken   -> PC_Sel_PC_4,
-    Weak_Taken      -> PC_Sel_new_addr,
-    Strong_Taken    -> PC_Sel_new_addr
+    Weak_Nottaken -> PC_Sel_PC_4,
+    Weak_Taken -> PC_Sel_new_addr,
+    Strong_Taken -> PC_Sel_new_addr
   ))
 
   val predict_addr = (io.pc.asSInt() + Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8), 0.U(2.W)).asSInt()).asUInt()
@@ -117,7 +147,7 @@ class Branch_Predict extends Module with Config {
     Mux(con_addr_is_resolved && predict_fail, con_PC_Sel,
       Mux(is_conditional_jump, predict_PC_Sel, PC_Sel_PC_4)))
 
-  io.new_addr   := Mux(noncon_addr_is_resolved, io.branch_addr, Mux(con_addr_is_resolved, io.branch_addr,
+  io.new_addr := Mux(noncon_addr_is_resolved, io.branch_addr, Mux(con_addr_is_resolved, io.branch_addr,
     Mux(is_conditional_jump, predict_addr, 0.U)))
   io.pc_recover := addr_buffer.io.front
 
@@ -125,91 +155,5 @@ class Branch_Predict extends Module with Config {
   io.IF_ID_Flush := Mux(flush, IF_ID_Flush_True, IF_ID_Flush_False)
   io.ID_EX_Flush := Mux(flush, ID_EX_Flush_True, ID_EX_Flush_False)
 
-  /*
-  val branch = ListLookup(io.inst, Control.default, Control.map)(4)
-  val dynamic_counter_status = RegInit(0.U(2.W))
-  val formal_pc_4 = RegInit(0.U(WLEN.W))
-  var branch_flag = RegInit(0.U(1.W))
-  val ex_is_branch = io.ex_Branch.toBool() && (io.ex_Jump_Type === Conditional)
-
-  // Set flag
-  branch_flag := Mux(branch.toBool(), 1.U, 0.U)
-
-  // update counter_status
-  val update_status = Mux(ex_is_branch,
-      Mux(io.PC_Src.toBool(), MuxLookup(dynamic_counter_status, dynamic_counter_status, Seq(
-      Strong_Nottaken -> Weak_Nottaken,
-      Weak_Nottaken   -> Weak_Taken,
-      Weak_Taken      -> Strong_Taken,
-      Strong_Taken    -> Strong_Taken
-    )), MuxLookup(dynamic_counter_status, dynamic_counter_status, Seq(
-      Strong_Nottaken -> Strong_Nottaken,
-      Weak_Nottaken   -> Strong_Nottaken,
-      Weak_Taken      -> Weak_Nottaken,
-      Strong_Taken    -> Weak_Taken
-    ))), dynamic_counter_status
-  )
-  dynamic_counter_status := update_status
-
-  val predict_fail = ex_is_branch && (update_status === Weak_Taken || update_status === Weak_Nottaken)
-  val predict_success = ex_is_branch && (update_status === Strong_Taken || update_status === Strong_Nottaken)
-
-  // calculate branch addr
-  val predict_branch_addr = (io.pc.asSInt() + Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8), 0.U(1.W)).asSInt()).asUInt()
-  val pc_4 = io.pc + 4.U
-
-  // record formal pc_4
-  val record_con = (dynamic_counter_status === Weak_Taken || dynamic_counter_status === Strong_Taken) &&
-                   branch.toBool()
-  formal_pc_4 := Mux(record_con, pc_4, formal_pc_4)
-  io.pc_recover := formal_pc_4
-
-  /* assume that branch never taken */
-  /*
-  io.PC_Sel := Mux(io.PC_Src.toBool(), PC_Sel_new_addr, PC_Sel_PC_4)
-  io.new_addr := io.branch_addr
-
-  io.IF_ID_Flush := Mux(io.PC_Src.toBool(), IF_ID_Flush_True, IF_ID_Flush_False)
-  io.ID_EX_Flush := Mux(io.PC_Src.toBool(), ID_EX_Flush_True, ID_EX_Flush_False)
-  */
-
-  /* dynamic branch predict use 2-bit saturating counter (global) */
-  /*
-  val temp_sel = Mux(io.PC_Src.toBool(), PC_Sel_new_addr,
-    Mux(branch.toBool(), MuxLookup(dynamic_counter_status, PC_Sel_PC_4,
-        Seq(
-          Strong_Nottaken -> PC_Sel_PC_4,
-          Weak_Nottaken   -> PC_Sel_PC_4,
-          Weak_Taken      -> PC_Sel_new_addr,
-          Strong_Taken    -> PC_Sel_new_addr
-        )
-      ), PC_Sel_PC_4
-    )
-  )
-  val temp_new_addr = Mux(io.PC_Src.toBool(), io.branch_addr,
-    Mux(branch.toBool(), MuxLookup(dynamic_counter_status, pc_4,
-        Seq(
-          Strong_Nottaken -> pc_4,
-          Weak_Nottaken   -> pc_4,
-          Weak_Taken      -> predict_branch_addr,
-          Strong_Taken    -> predict_branch_addr
-        )
-      ), pc_4
-    )
-  )
-
-  val need_to_recover = predict_fail && ((dynamic_counter_status === Strong_Taken) || (dynamic_counter_status === Weak_Taken))
-
-  val temp_sel_2 = Mux(need_to_recover, PC_Sel_recover, temp_sel)
-
-  // Nonconditional branch
-  val nonconditional_branch = io.ex_Jump_Type === NonConditional && io.ex_Branch.toBool()
-  val temp_sel_3 = Mux(predict_success, PC_Sel_PC_4, temp_sel_2)
-  io.PC_Sel := Mux(nonconditional_branch, PC_Sel_new_addr, temp_sel_3)
-  io.new_addr := Mux(nonconditional_branch, io.branch_addr, temp_new_addr)
-
-  io.IF_ID_Flush := Mux(predict_fail || nonconditional_branch, IF_ID_Flush_True, IF_ID_Flush_False)
-  io.ID_EX_Flush := Mux(predict_fail || nonconditional_branch, ID_EX_Flush_True, ID_EX_Flush_False)
-  */
-  */
+  //io.Predict_Failed := predict_fail
 }

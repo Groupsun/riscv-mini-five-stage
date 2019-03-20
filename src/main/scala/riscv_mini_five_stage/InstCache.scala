@@ -6,6 +6,7 @@
 * Instruction cache for my processor, I treat it as a combinational logic
 * 02-01-2019 - test cache, 128B, 32 Words, implemented use Mem
 * 17-01-2019 - test cache, 256B, 64 Words, implemented use Mem
+* 14-03-2019 - test cahce, 4096B, 1024 Words, implemented use Mem
 * */
 
 package riscv_mini_five_stage

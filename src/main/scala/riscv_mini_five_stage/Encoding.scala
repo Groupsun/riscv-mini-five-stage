@@ -37,6 +37,9 @@ object Instruction_Type {
   val UJ_type   = 5
   val Is_type   = 6
   val NOP_type  = 7
+  val MRET_type = 8
+  val CSR_type  = 9
+  val CSRI_type = 10
   val input_count = Map(
     R_type    -> 3,
     I_type    -> 3,
@@ -45,7 +48,9 @@ object Instruction_Type {
     SB_type   -> 3,
     U_type    -> 2,
     UJ_type   -> 2,
-    NOP_type  -> 0
+    NOP_type  -> 0,
+    CSR_type  -> 3,
+    CSRI_type -> 3
   )
   val inst_type_map = Map(
     "LUI"   -> U_type,
@@ -85,7 +90,14 @@ object Instruction_Type {
     "SRA"   -> R_type,
     "OR"    -> R_type,
     "AND"   -> R_type,
-    "NOP"   -> NOP_type
+    "NOP"   -> NOP_type,
+    "MRET"  -> MRET_type,
+    "CSRRW" -> CSR_type,
+    "CSRRS" -> CSR_type,
+    "CSRRC" -> CSR_type,
+    "CSRRWI" -> CSRI_type,
+    "CSRRSI" -> CSRI_type,
+    "CSRRCI" -> CSRI_type
   )
   val inst_bit_map  = Map(
     "LUI"   -> "?????????????????????????0110111",
@@ -125,7 +137,30 @@ object Instruction_Type {
     "SRA"   -> "0100000??????????101?????0110011",
     "OR"    -> "0000000??????????110?????0110011",
     "AND"   -> "0000000??????????111?????0110011",
-    "NOP"   -> "00000000000000000000000000010011"
+    "NOP"   -> "00000000000000000000000000010011",
+    "MRET"  -> "00110000001000000000000001110011",
+    "CSRRW" -> "?????????????????001?????1110011",
+    "CSRRS" -> "?????????????????010?????1110011",
+    "CSRRC" -> "?????????????????011?????1110011",
+    "CSRRWI" -> "?????????????????101?????1110011",
+    "CSRRSI" -> "?????????????????110?????1110011",
+    "CSRRCI" -> "?????????????????111?????1110011"
+  )
+  val csr_map = Map(
+    "mie"       -> "001100000100",
+    "mtvec"     -> "001100000101",
+    "mepc"      -> "001101000001",
+    "mcause"    -> "001101000010",
+    "mtval"     -> "001101000011",
+    "mip"       -> "001101000100",
+    "mtime"     -> "011100000000",
+    "mtimeh"    -> "011100000001",
+    "mtimecmp"  -> "011100000010",
+    "mtimecmph" -> "011100000011",
+    "mcycle"    -> "101100000000",
+    "mcycleh"   -> "101110000000",
+    "minstret"  -> "101100000010",
+    "minstreth" -> "101110000010"
   )
 
 }
@@ -144,9 +179,6 @@ object Encoding {
       val inst_type = Instruction_Type.inst_type_map(split(0))
       val bitstring = Instruction_Type.inst_bit_map(split(0))
       val result = encoding(split, inst_type, bitstring)
-      //println(result)
-      val t1 = Integer.parseInt(result.substring(0, 8), 2)
-      //println(t1)
       val B0 = Integer.toHexString(Integer.parseInt(result.substring(0, 8), 2))
       //println(B0)
       val B1 = Integer.toHexString(Integer.parseInt(result.substring(8, 16), 2))
@@ -179,7 +211,7 @@ object Encoding {
       } else if(temp.length() > 20) {
         temp = temp.substring(12, 32)
       }
-    } else if(inst_type == Instruction_Type.Is_type) {
+    } else if(inst_type == Instruction_Type.Is_type || inst_type == Instruction_Type.CSRI_type) {
       if(temp.length() < 5) {
         for (i <- 0 until 5 - temp.length()) {
           temp = "0" + temp
@@ -202,6 +234,10 @@ object Encoding {
       }
     }
     temp
+  }
+
+  def encoding_csr(input: String):String = {
+    Instruction_Type.csr_map(input)
   }
 
   def encoding(split: Array[String], inst_type: Int, bitstring: String): String = {
@@ -261,6 +297,21 @@ object Encoding {
       result = imm.substring(0, 1) + imm.substring(10, 20) + imm.substring(9, 10) + imm.substring(1, 9) + rd + opcode
     } else if(inst_type == Instruction_Type.NOP_type) {
       result = Instruction_Type.inst_bit_map("NOP")
+    } else if(inst_type == Instruction_Type.MRET_type) {
+      result = Instruction_Type.inst_bit_map("MRET")
+    } else if(inst_type == Instruction_Type.CSR_type) {
+      val rd = encoding_register(split(1))
+      val csr = encoding_csr(split(2))
+      val rs1 = encoding_register(split(3))
+
+      result = csr + rs1 + funct3 + rd + opcode
+      println(result)
+    } else if(inst_type == Instruction_Type.CSRI_type) {
+      val rd = encoding_register(split(1))
+      val csr = encoding_csr(split(2))
+      val imm = encoding_imm(split(3), inst_type)
+
+      result = csr + imm + funct3 + rd + opcode
     }
 
     return result

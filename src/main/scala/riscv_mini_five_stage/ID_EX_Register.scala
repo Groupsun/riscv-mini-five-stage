@@ -35,6 +35,9 @@ class ID_EX_Registerio extends Bundle with Config {
   val Mem_Write  = Input(UInt(MEM_WRITE_SIG_LEN.W))
   val Data_Size  = Input(UInt(DATA_SIZE_SIG_LEN.W))
   val Load_Type  = Input(UInt(LOAD_TYPE_SIG_LEN.W))
+  val CSR_src    = Input(UInt(CSR_SRC_SIG_LEN.W))
+  val Write_CSR  = Input(UInt(WRITE_CSR_SIG_LEN.W))
+  val is_Illegal = Input(UInt(IS_ILLEGAL_SIG_LEN.W))
 
   // WB stage
   val Reg_Write  = Input(UInt(REGWRITE_SIG_LEN.W))
@@ -54,6 +57,9 @@ class ID_EX_Registerio extends Bundle with Config {
   val ex_Load_Type  = Output(UInt(LOAD_TYPE_SIG_LEN.W))
   val ex_Reg_Write  = Output(UInt(REGWRITE_SIG_LEN.W))
   val ex_Mem_to_Reg = Output(UInt(REG_SRC_SIG_LEN.W))
+  val ex_CSR_src    = Output(UInt(CSR_SRC_SIG_LEN.W))
+  val ex_Write_CSR  = Output(UInt(WRITE_CSR_SIG_LEN.W))
+  val ex_is_Illegal = Output(UInt(IS_ILLEGAL_SIG_LEN.W))
 
   val ex_pc         = Output(UInt(WLEN.W))
   val ex_pc_4       = Output(UInt(WLEN.W))
@@ -90,28 +96,35 @@ class ID_EX_Register extends Module with Config {
   val reg_write   = RegInit(0.U(REGWRITE_SIG_LEN.W))
   val mem_to_reg  = RegInit(0.U(REG_SRC_SIG_LEN.W))
   val imm_sel     = RegInit(0.U(IMM_SEL_SIG_LEN.W))
+  val csr_src     = RegInit(0.U(CSR_SRC_SIG_LEN.W))
+  val write_csr   = RegInit(0.U(WRITE_CSR_SIG_LEN.W))
+  val is_illegal  = RegInit(0.U(IS_ILLEGAL_SIG_LEN.W))
 
   // apply regs
-  pc                := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_pc)
-  pc_4              := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_pc_4)
-  rs1_out           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs1_out)
-  rs2_out           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs2_out)
-  imm               := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_imm)
-  inst              := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_inst)
-  rs1               := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs1)
-  rs2               := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.id_rs2)
-  alu_src           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.ALU_Src)
-  aluop             := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.ALUOp)
-  branch            := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Branch)
-  branch_src        := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Branch_Src)
-  jump_type         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Jump_Type)
-  mem_read          := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Mem_Read)
-  mem_write         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Mem_Write)
-  data_size         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Data_Size)
-  load_type         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Load_Type)
-  reg_write         := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Reg_Write)
-  mem_to_reg        := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Mem_to_Reg)
-  imm_sel           := Mux(io.ID_EX_Flush.toBool(), 0.U(WLEN.W), io.Imm_Sel)
+  pc                := io.id_pc
+  pc_4              := io.id_pc_4
+  rs1_out           := io.id_rs1_out
+  rs2_out           := io.id_rs2_out
+  imm               := io.id_imm
+  inst              := io.id_inst
+  rs1               := io.id_rs1
+  rs2               := io.id_rs2
+  alu_src           := io.ALU_Src
+  aluop             := io.ALUOp
+  branch            := io.Branch
+  branch_src        := io.Branch_Src
+
+  jump_type         := Mux(io.ID_EX_Flush.toBool(), 0.U(JUMP_TYPE_SIG_LEN.W), io.Jump_Type)
+  mem_read          := Mux(io.ID_EX_Flush.toBool(), 0.U(MEM_READ_SIG_LEN.W), io.Mem_Read)
+  mem_write         := Mux(io.ID_EX_Flush.toBool(), 0.U(MEM_WRITE_SIG_LEN.W), io.Mem_Write)
+  data_size         := Mux(io.ID_EX_Flush.toBool(), 0.U(DATA_SIZE_SIG_LEN.W), io.Data_Size)
+  load_type         := Mux(io.ID_EX_Flush.toBool(), 0.U(LOAD_TYPE_SIG_LEN.W), io.Load_Type)
+  reg_write         := Mux(io.ID_EX_Flush.toBool(), 0.U(REGWRITE_SIG_LEN.W), io.Reg_Write)
+  mem_to_reg        := Mux(io.ID_EX_Flush.toBool(), 0.U(REG_SRC_SIG_LEN.W), io.Mem_to_Reg)
+  imm_sel           := Mux(io.ID_EX_Flush.toBool(), 0.U(IMM_SEL_SIG_LEN.W), io.Imm_Sel)
+  csr_src           := Mux(io.ID_EX_Flush.toBool(), 0.U(CSR_SRC_SIG_LEN.W), io.CSR_src)
+  write_csr         := Mux(io.ID_EX_Flush.toBool(), 0.U(WRITE_CSR_SIG_LEN.W), io.Write_CSR)
+  is_illegal        := Mux(io.ID_EX_Flush.toBool(), 0.U(IS_ILLEGAL_SIG_LEN.W), io.is_Illegal)
 
   // output
   io.ex_ALU_Src     := alu_src
@@ -135,6 +148,9 @@ class ID_EX_Register extends Module with Config {
   io.ex_inst        := inst
   io.ex_rd          := inst(11, 7)
   io.ex_Imm_Sel     := imm_sel
+  io.ex_CSR_src     := csr_src
+  io.ex_Write_CSR   := write_csr
+  io.ex_is_Illegal  := is_illegal
 }
 
 object ID_EX_Register extends App {

@@ -16,11 +16,12 @@ trait Config {
   val BLEN           = 8
   val HLEN           = 16
   val WLEN           = 32
-  val INST_CACHE_LEN = 256
+  val INST_CACHE_LEN = 4096
   val REG_LEN        = 5
   val REGFILE_LEN    = 32
   val OPCODE_LEN     = 7
   val DATA_CAHCE_LEN = 32
+  val M_Mode         = 3
 
   // control signal's width
   val PC_WRITE_SIG_LEN      = 1
@@ -47,4 +48,14 @@ trait Config {
   val IF_ID_FLUSH_SIG_LEN   = 1
   val ID_EX_FLUSH_SIG_LEN   = 1
   val ADDR_BUFFER_FLUSH_LEN = 1
+
+  val WRITE_CSR_SIG_LEN       = 3
+  val IS_ILLEGAL_SIG_LEN      = 1
+  val EX_MEM_FLUSH_SIG_LEN    = 1
+  val IS_EXCEPTION_SIG_LEN    = 2
+  val CSR_SRC_SIG_LEN         = 1
+  val EXCEPTION_FLUSH_SIG_LEN = 1
+  val PREDICT_FAILED_SIG_LEN  = 1
+  val MIE_ENABLE_SIG_LEN      = 1
+  val ID_EX_WRITE_SIG_LEN     = 1
 }

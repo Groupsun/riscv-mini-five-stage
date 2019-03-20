@@ -13,12 +13,16 @@ import chisel3.util.MuxLookup
 import Control._
 import Forward._
 import Branch_Predict_Signal._
+import CSR._
 
 class IF_datapathio extends Bundle with Config {
   val if_pc             = Input(UInt(WLEN.W))
   val PC_Sel            = Input(UInt(PC_SEL_SIG_LEN.W))
   val new_addr          = Input(UInt(WLEN.W))
   val pc_recover        = Input(UInt(WLEN.W))
+  val is_Exception      = Input(UInt(IS_EXCEPTION_SIG_LEN.W))
+  val mepc              = Input(UInt(WLEN.W))
+  val mtvec             = Input(UInt(WLEN.W))
 
   val if_new_pc         = Output(UInt(WLEN.W))
   val if_pc_4           = Output(UInt(WLEN.W))
@@ -38,6 +42,9 @@ class ID_datapathio extends Bundle with Config {
   val Mem_to_Reg  = Input(UInt(REG_SRC_SIG_LEN.W))
   val Jump_Type   = Input(UInt(JUMP_TYPE_SIG_LEN.W))
   val Imm_Sel     = Input(UInt(IMM_SEL_SIG_LEN.W))
+  val CSR_src     = Input(UInt(CSR_SRC_SIG_LEN.W))
+  val Write_CSR   = Input(UInt(WRITE_CSR_SIG_LEN.W))
+  val is_Illegal  = Input(UInt(IS_ILLEGAL_SIG_LEN.W))
 
   val id_Reg_Write   = Output(UInt(REGWRITE_SIG_LEN.W))
   val id_ALU_Src     = Output(UInt(ALU_SRC_SIG_LEN.W))
@@ -51,6 +58,9 @@ class ID_datapathio extends Bundle with Config {
   val id_Mem_to_Reg  = Output(UInt(REG_SRC_SIG_LEN.W))
   val id_Jump_Type   = Output(UInt(JUMP_TYPE_SIG_LEN.W))
   val id_Imm_Sel     = Output(UInt(IMM_SEL_SIG_LEN.W))
+  val id_CSR_src     = Output(UInt(CSR_SRC_SIG_LEN.W))
+  val id_Write_CSR   = Output(UInt(WRITE_CSR_SIG_LEN.W))
+  val id_is_Illegal  = Output(UInt(IS_ILLEGAL_SIG_LEN.W))
 }
 
 class EX_datapathio extends Bundle with Config {
@@ -64,6 +74,8 @@ class EX_datapathio extends Bundle with Config {
   val ex_Branch_Src   = Input(UInt(BRANCH_SRC_SIG_LEN.W))
   val ex_Jump_Type    = Input(UInt(JUMP_TYPE_SIG_LEN.W))
   val ex_Imm_Sel      = Input(UInt(IMM_SEL_SIG_LEN.W))
+  val ex_CSR_src      = Input(UInt(CSR_SRC_SIG_LEN.W))
+  val Exception_Flush = Input(UInt(EXCEPTION_FLUSH_SIG_LEN.W))
 
   // Forward unit
   val Forward_A       = Input(UInt(FORWARD_A_SIG_LEN.W))
@@ -77,6 +89,22 @@ class EX_datapathio extends Bundle with Config {
 
   val PC_Src            = Output(UInt(PC_SRC_SIG_LEN.W))
   val branch_addr       = Output(UInt(WLEN.W))
+  val csr_data_in       = Output(UInt(WLEN.W))
+
+  // Exception Flush
+  val ex_Mem_Read       = Input(UInt(MEM_READ_SIG_LEN.W))
+  val ex_Mem_Write      = Input(UInt(MEM_WRITE_SIG_LEN.W))
+  val ex_Data_Size      = Input(UInt(DATA_SIZE_SIG_LEN.W))
+  val ex_Load_Type      = Input(UInt(LOAD_TYPE_SIG_LEN.W))
+  val ex_Reg_Write      = Input(UInt(REGWRITE_SIG_LEN.W))
+  val ex_Mem_to_Reg     = Input(UInt(REG_SRC_SIG_LEN.W))
+
+  val mem_Mem_Read       = Output(UInt(MEM_READ_SIG_LEN.W))
+  val mem_Mem_Write      = Output(UInt(MEM_WRITE_SIG_LEN.W))
+  val mem_Data_Size      = Output(UInt(DATA_SIZE_SIG_LEN.W))
+  val mem_Load_Type      = Output(UInt(LOAD_TYPE_SIG_LEN.W))
+  val mem_Reg_Write      = Output(UInt(REGWRITE_SIG_LEN.W))
+  val mem_Mem_to_Reg     = Output(UInt(REG_SRC_SIG_LEN.W))
 }
 
 class MEM_datapathio extends Bundle with Config {
@@ -97,6 +125,7 @@ class WB_datapathio extends Bundle with Config {
   val wb_pc_4           = Input(UInt(WLEN.W))
   val wb_imm            = Input(UInt(WLEN.W))
   val wb_aui_pc         = Input(UInt(WLEN.W))
+  val wb_csr_data_out   = Input(UInt(WLEN.W))
   val wb_Mem_to_Reg     = Input(UInt(REG_SRC_SIG_LEN.W))
   val wb_reg_writedata  = Output(UInt(WLEN.W))
 }
@@ -130,10 +159,15 @@ class Datapath extends Module with Config {
   val PC_Src = Mux(io.ex_datapathio.ex_Jump_Type.toBool(), 1.U, io.ex_datapathio.ex_alu_conflag).toBool() &&
     io.ex_datapathio.ex_Branch.toBool()
   io.ex_datapathio.PC_Src := PC_Src
-  io.if_datapathio.if_new_pc := MuxLookup(io.if_datapathio.PC_Sel, PC_4, Seq(
+  val normal_pc = MuxLookup(io.if_datapathio.PC_Sel, PC_4, Seq(
     PC_Sel_PC_4     -> PC_4,
     PC_Sel_new_addr -> io.if_datapathio.new_addr,
     PC_Sel_recover  -> io.if_datapathio.pc_recover
+  ))
+  io.if_datapathio.if_new_pc := MuxLookup(io.if_datapathio.is_Exception, normal_pc, Seq(
+    is_Exception_False  -> normal_pc,
+    is_Exception_MEPC   -> io.if_datapathio.mepc,
+    is_Exception_MTVEC  -> io.if_datapathio.mtvec
   ))
 
   /* ID stage */
@@ -150,6 +184,9 @@ class Datapath extends Module with Config {
   io.id_datapathio.id_Mem_to_Reg  := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Mem_to_Reg)
   io.id_datapathio.id_Jump_Type   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Jump_Type)
   io.id_datapathio.id_Imm_Sel     := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Imm_Sel)
+  io.id_datapathio.id_CSR_src     := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.CSR_src)
+  io.id_datapathio.id_Write_CSR   := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.Write_CSR)
+  io.id_datapathio.id_is_Illegal  := Mux(io.id_datapathio.Bubble.toBool(), 0.U, io.id_datapathio.is_Illegal)
 
   /* EX stage */
   // Forward unit
@@ -179,6 +216,16 @@ class Datapath extends Module with Config {
     io.ex_datapathio.ex_imm, operand_b)
   io.ex_datapathio.forward_rs2_out := operand_b
 
+  io.ex_datapathio.csr_data_in  := Mux(io.ex_datapathio.ex_CSR_src.toBool(), io.ex_datapathio.ex_imm, io.ex_datapathio.alu_a_src)
+
+  // Exception flush
+  io.ex_datapathio.mem_Data_Size  := Mux(io.ex_datapathio.Exception_Flush.toBool(), 0.U, io.ex_datapathio.ex_Data_Size)
+  io.ex_datapathio.mem_Load_Type  := Mux(io.ex_datapathio.Exception_Flush.toBool(), 0.U, io.ex_datapathio.ex_Load_Type)
+  io.ex_datapathio.mem_Mem_Read   := Mux(io.ex_datapathio.Exception_Flush.toBool(), 0.U, io.ex_datapathio.ex_Mem_Read)
+  io.ex_datapathio.mem_Mem_Write  := Mux(io.ex_datapathio.Exception_Flush.toBool(), 0.U, io.ex_datapathio.ex_Mem_Write)
+  io.ex_datapathio.mem_Mem_to_Reg := Mux(io.ex_datapathio.Exception_Flush.toBool(), 0.U, io.ex_datapathio.ex_Mem_to_Reg)
+  io.ex_datapathio.mem_Reg_Write  := Mux(io.ex_datapathio.Exception_Flush.toBool(), 0.U, io.ex_datapathio.ex_Reg_Write)
+
   /* MEM stage */
   // Memory forward unit
   io.mem_datapathio.mem_writedata := Mux(io.mem_datapathio.MemWrite_Src.toBool(),
@@ -192,7 +239,8 @@ class Datapath extends Module with Config {
       RegWrite_Mem    -> io.wb_datapathio.wb_dataout,
       RegWrite_PC_4   -> io.wb_datapathio.wb_pc_4,
       RegWrite_imm    -> io.wb_datapathio.wb_imm,
-      RegWrite_ipc    -> io.wb_datapathio.wb_aui_pc
+      RegWrite_ipc    -> io.wb_datapathio.wb_aui_pc,
+      RegWrite_CSR    -> io.wb_datapathio.wb_csr_data_out
     ))
 }
 

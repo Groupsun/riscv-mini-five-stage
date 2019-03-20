@@ -60,6 +60,7 @@ class Tile extends Module with Config {
   val forward           = Module(new Forward)
   val hazard_detection  = Module(new Hazard_Detection)
   val branch_predict    = Module(new Branch_Predict)
+  val csr               = Module(new CSR)
 
   /* IF stage */
   // generate next PC address
@@ -67,6 +68,9 @@ class Tile extends Module with Config {
   datapath.io.if_datapathio.new_addr          := branch_predict.io.new_addr
   datapath.io.if_datapathio.PC_Sel            := branch_predict.io.PC_Sel
   datapath.io.if_datapathio.pc_recover        := branch_predict.io.pc_recover
+  datapath.io.if_datapathio.is_Exception      := csr.io.is_Exception
+  datapath.io.if_datapathio.mepc              := csr.io.mepc_out
+  datapath.io.if_datapathio.mtvec             := csr.io.mtvec_out
 
   // PC
   pc.io.addr_input := datapath.io.if_datapathio.if_new_pc
@@ -81,8 +85,8 @@ class Tile extends Module with Config {
   //monitor -------------------------
 
   /* IF/ID pipeline register */
-  if_id_register.io.if_id_write := hazard_detection.io.IF_ID_Write
-  if_id_register.io.if_flush    := branch_predict.io.IF_ID_Flush
+  if_id_register.io.if_id_write := hazard_detection.io.IF_ID_Write.toBool()
+  if_id_register.io.if_flush    := branch_predict.io.IF_ID_Flush | csr.io.IF_ID_Flush
   if_id_register.io.if_inst     := instcache.io.inst
   if_id_register.io.if_pc       := pc.io.pc_out
   if_id_register.io.if_pc_4     := datapath.io.if_datapathio.if_pc_4
@@ -112,6 +116,9 @@ class Tile extends Module with Config {
   datapath.io.id_datapathio.Mem_to_Reg    := control.io.Mem_to_Reg
   datapath.io.id_datapathio.Jump_Type     := control.io.Jump_Type
   datapath.io.id_datapathio.Imm_Sel       := control.io.Imm_Sel
+  datapath.io.id_datapathio.CSR_src       := control.io.CSR_src
+  datapath.io.id_datapathio.Write_CSR     := control.io.Write_CSR
+  datapath.io.id_datapathio.is_Illegal    := control.io.is_Illegal
 
   // Register file
   regfile.io.rs1      := if_id_register.io.id_rs1
@@ -133,7 +140,7 @@ class Tile extends Module with Config {
 
   /* ID/EX pipeline register */
   // control signals
-  id_ex_register.io.ID_EX_Flush := branch_predict.io.ID_EX_Flush
+  id_ex_register.io.ID_EX_Flush := branch_predict.io.ID_EX_Flush | csr.io.ID_EX_Flush
   id_ex_register.io.ALU_Src     := datapath.io.id_datapathio.id_ALU_Src
   id_ex_register.io.ALUOp       := datapath.io.id_datapathio.id_ALUOp
   id_ex_register.io.Branch      := datapath.io.id_datapathio.id_Branch
@@ -146,6 +153,9 @@ class Tile extends Module with Config {
   id_ex_register.io.Reg_Write   := datapath.io.id_datapathio.id_Reg_Write
   id_ex_register.io.Mem_to_Reg  := datapath.io.id_datapathio.id_Mem_to_Reg
   id_ex_register.io.Imm_Sel     := datapath.io.id_datapathio.id_Imm_Sel
+  id_ex_register.io.CSR_src     := datapath.io.id_datapathio.id_CSR_src
+  id_ex_register.io.Write_CSR   := datapath.io.id_datapathio.id_Write_CSR
+  id_ex_register.io.is_Illegal  := datapath.io.id_datapathio.id_is_Illegal
 
   // data
   id_ex_register.io.id_rs1_out := regfile.io.rs1_out
@@ -189,6 +199,34 @@ class Tile extends Module with Config {
   alu.io.Src_B := datapath.io.ex_datapathio.alu_b_src
   alu.io.ALUOp := id_ex_register.io.ex_ALUOp
 
+  // CSR
+  datapath.io.ex_datapathio.ex_CSR_src  := id_ex_register.io.ex_CSR_src
+  csr.io.ex_Mem_Read    := id_ex_register.io.ex_Mem_Read
+  csr.io.ex_Mem_Write   := id_ex_register.io.ex_Mem_Write
+  csr.io.ex_branch_addr := datapath.io.ex_datapathio.branch_addr
+  csr.io.ex_addr        := alu.io.Sum
+  csr.io.ex_inst        := id_ex_register.io.ex_inst
+  csr.io.csr_data_in    := datapath.io.ex_datapathio.csr_data_in
+  csr.io.ex_pc_4        := id_ex_register.io.ex_pc_4
+  csr.io.ex_Write_CSR   := id_ex_register.io.ex_Write_CSR
+  csr.io.ex_is_Illegal  := id_ex_register.io.ex_is_Illegal
+  csr.io.ex_Branch      := id_ex_register.io.ex_Branch
+  csr.io.PC_Sel         := branch_predict.io.PC_Sel
+  csr.io.new_addr       := branch_predict.io.new_addr
+  csr.io.pc_recover     := branch_predict.io.pc_recover
+  csr.io.Bubble         := hazard_detection.io.Bubble
+  csr.io.if_inst        := instcache.io.inst
+  csr.io.is_Waiting_Resolved := branch_predict.io.is_Waiting_Resolved
+
+  // Exception Flush
+  datapath.io.ex_datapathio.ex_Reg_Write := id_ex_register.io.ex_Reg_Write
+  datapath.io.ex_datapathio.ex_Mem_to_Reg := id_ex_register.io.ex_Mem_to_Reg
+  datapath.io.ex_datapathio.ex_Mem_Write  := id_ex_register.io.ex_Mem_Write
+  datapath.io.ex_datapathio.ex_Mem_Read   := id_ex_register.io.ex_Mem_Read
+  datapath.io.ex_datapathio.ex_Load_Type  := id_ex_register.io.ex_Load_Type
+  datapath.io.ex_datapathio.ex_Data_Size  := id_ex_register.io.ex_Data_Size
+  datapath.io.ex_datapathio.Exception_Flush := csr.io.Exception_Flush
+
   //monitor -------------------------
   io.ex_rs1_out     := id_ex_register.io.ex_rs1_out
   io.ex_rs2_out     := id_ex_register.io.ex_rs2_out
@@ -205,12 +243,14 @@ class Tile extends Module with Config {
   ex_mem_register.io.ex_imm         := id_ex_register.io.ex_imm
   ex_mem_register.io.ex_aui_pc      := datapath.io.ex_datapathio.ex_aui_pc
   ex_mem_register.io.ex_rs2         := id_ex_register.io.ex_rs2
-  ex_mem_register.io.ex_Mem_Read    := id_ex_register.io.ex_Mem_Read
-  ex_mem_register.io.ex_Mem_Write   := id_ex_register.io.ex_Mem_Write
-  ex_mem_register.io.ex_Data_Size   := id_ex_register.io.ex_Data_Size
-  ex_mem_register.io.ex_Load_Type   := id_ex_register.io.ex_Load_Type
-  ex_mem_register.io.ex_Reg_Write   := id_ex_register.io.ex_Reg_Write
-  ex_mem_register.io.ex_Mem_to_Reg  := id_ex_register.io.ex_Mem_to_Reg
+  ex_mem_register.io.ex_inst        := id_ex_register.io.ex_inst
+  ex_mem_register.io.ex_Mem_Read    := datapath.io.ex_datapathio.mem_Mem_Read
+  ex_mem_register.io.ex_Mem_Write   := datapath.io.ex_datapathio.mem_Mem_Write
+  ex_mem_register.io.ex_Data_Size   := datapath.io.ex_datapathio.mem_Data_Size
+  ex_mem_register.io.ex_Load_Type   := datapath.io.ex_datapathio.mem_Load_Type
+  ex_mem_register.io.ex_Reg_Write   := datapath.io.ex_datapathio.mem_Reg_Write
+  ex_mem_register.io.ex_Mem_to_Reg  := datapath.io.ex_datapathio.mem_Mem_to_Reg
+  ex_mem_register.io.ex_csr_data_out := csr.io.csr_data_out
 
   /* MEM stage */
   // Memory forward
@@ -224,6 +264,7 @@ class Tile extends Module with Config {
   datacache.io.Mem_Write  := ex_mem_register.io.mem_Mem_Write
   datacache.io.Data_Size  := ex_mem_register.io.mem_Data_Size
   datacache.io.Load_Type  := ex_mem_register.io.mem_Load_Type
+
 
   //monitor -------------------------
   io.mem_rd           := ex_mem_register.io.mem_rd
@@ -241,6 +282,7 @@ class Tile extends Module with Config {
   mem_wb_register.io.mem_pc_4         := ex_mem_register.io.mem_pc_4
   mem_wb_register.io.mem_imm          := ex_mem_register.io.mem_imm
   mem_wb_register.io.mem_aui_pc       := ex_mem_register.io.mem_aui_pc
+  mem_wb_register.io.mem_csr_data_out := ex_mem_register.io.mem_csr_data_out
 
   /* WB stage */
   datapath.io.wb_datapathio.wb_alu_sum      := mem_wb_register.io.wb_alu_sum
@@ -249,6 +291,7 @@ class Tile extends Module with Config {
   datapath.io.wb_datapathio.wb_imm          := mem_wb_register.io.wb_imm
   datapath.io.wb_datapathio.wb_aui_pc       := mem_wb_register.io.wb_aui_pc
   datapath.io.wb_datapathio.wb_Mem_to_Reg   := mem_wb_register.io.wb_Mem_to_Reg
+  datapath.io.wb_datapathio.wb_csr_data_out := mem_wb_register.io.wb_csr_data_out
 
   //monitor -------------------------
   io.wb_rd            := mem_wb_register.io.wb_rd
@@ -272,6 +315,7 @@ class Tile extends Module with Config {
   branch_predict.io.pc            := pc.io.pc_out
   branch_predict.io.ex_Branch     := id_ex_register.io.ex_Branch
   branch_predict.io.ex_Jump_Type  := id_ex_register.io.ex_Jump_Type
+  branch_predict.io.is_Exception  := csr.io.is_Exception
 
   /* output test */
   io.Forward_A    := forward.io.Forward_A

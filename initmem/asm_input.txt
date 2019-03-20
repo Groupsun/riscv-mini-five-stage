@@ -1,4 +1,5 @@
-NOP
+ADDI    x20, x0, 0x0A
+CSRRW   x21, mtimecmp, x20
 ADDI    x1, x0, 0x20
 ADDI    x7, x0, 0x01
 ADDI    x10, x0, 0x01
@@ -37,3 +38,5 @@ ADDI    x2, x2, 0x01
 BLT     x2, x12, 0x-14
 NOP
 NOP
+NOP
+MRET
