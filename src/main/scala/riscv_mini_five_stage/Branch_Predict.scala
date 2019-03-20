@@ -79,13 +79,14 @@ class Branch_Predict extends Module with Config {
   val target_resolve_also_an_exception  = (noncon_addr_is_resolved || con_addr_is_resolved) && io.is_Exception === is_Exception_MTVEC
 
   // update status
-  when(is_nonconditional_jump || is_conditional_jump) {
+  when((is_nonconditional_jump || is_conditional_jump) && io.is_Exception === 0.U) {
     wait_for_resolving := 1.U
   } .elsewhen(noncon_addr_is_resolved || con_addr_is_resolved) {
     wait_for_resolving := 0.U
   } .otherwise {
     wait_for_resolving := wait_for_resolving
   }
+
 
   when(noncon_addr_is_resolved || con_addr_is_resolved) {
     resolving_processed := 2.U
@@ -95,7 +96,9 @@ class Branch_Predict extends Module with Config {
     resolving_processed := 0.U
   }
 
+
   io.is_Waiting_Resolved := Mux(wait_for_resolving === 1.U || resolving_processed =/= 0.U, 1.U, 0.U)
+  //io.is_Waiting_Resolved := Mux(wait_for_resolving === 1.U, 1.U, 0.U)
 
   addr_buffer.io.record := need_record_pc_4
   addr_buffer.io.addr_input := pc_4
