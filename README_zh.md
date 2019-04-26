@@ -45,6 +45,8 @@
 
 ### 输入测试程序
 
+**这是一个实验性的功能**
+
 将汇编代码写入到initmem/asm_input.txt中。
 
 格式：
@@ -64,3 +66,9 @@ UJ-type:   Op    rd , imm
 ```
 
 输出的二进制代码文件（txt格式）位于initmem/instcache.txt。仿真时会写入到指令缓存当中。
+
+### 编写你自己的测试代码
+
+打开 `/src/test/scala/riscv_mini_five_stage_test/`，新建你的测试代码文件即可。
+
+你可能需要参考 https://github.com/freechipsproject/chisel-testers 来编写你的测试代码。
