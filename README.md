@@ -15,35 +15,37 @@ The processor currently has no interrupt or exception scheme, this feature may b
 
 ## Project structure
 
-- src/main/scala/riscv_mini_five_stage: source code of the processor
-    - Addr_Buffer.scala: a small register file recording the address that need to recover from branch predict failure.
-    - ALU.scala: Arithmetic and logic unit of the processor.
-    - Branch_Predict.scala: Branch predict unit of the processor.
-    - Config.scala: Global config parameters of the processor, not the actual hardware component.
-    - Control.scala: Main control unit of the processor.
-    - DataCache.scala: Data cache of the processor.
-    - Datapath.scala: Datapath of the processor, include all the logic gates out of the functional unit.
-    - Encoding.scala: A simple program translates the assembly code to binary code, not the actual hardware component.
-    - EX_MEM_Register.scala: Pipeline register between EX and MEM stage.
-    - Forward.scala: Forward unit fo the processor.
-    - Hazard_Detection.scala: Detect the hazards that need to stall the processor.
-    - ID_EX_Register.scala: Pipeline register between ID and EX stage.
-    - IF_ID_Regsiter.scala: Pipeline register between IF and ID stage.
-    - ImmGen.scala: Generate the immediate from the instructions.
-    - InstCache.scala: Instruction cache of the processor.
-    - Instructions.scala: Define the instructions and their bitpat of RV32I, not the actual hardware component.
-    - MEM_WB_Register.scala: Pipeline register between MEM and WB stage.
-    - PC.scala: Program counter of the processor.
-    - RegFile.scala: Register file of the processor.
-    - Tile.scala: Top level of the processor, connects all the functional component.
+- `src/main/scala/riscv_mini_five_stage`: source code of the processor
+    - `Addr_Buffer.scala`: a small register file recording the address that need to recover from branch predict failure.
+    - `ALU.scala`: Arithmetic and logic unit of the processor.
+    - `Branch_Predict.scala`: Branch predict unit of the processor.
+    - `Config.scala`: Global config parameters of the processor, not the actual hardware component.
+    - `Control.scala`: Main control unit of the processor.
+    - `DataCache.scala`: Data cache of the processor.
+    - `Datapath.scala`: Datapath of the processor, include all the logic gates out of the functional unit.
+    - `Encoding.scala`: A simple program translates the assembly code to binary code, not the actual hardware component.
+    - `EX_MEM_Register.scala`: Pipeline register between EX and MEM stage.
+    - `Forward.scala`: Forward unit fo the processor.
+    - `Hazard_Detection.scala`: Detect the hazards that need to stall the processor.
+    - `ID_EX_Register.scala`: Pipeline register between ID and EX stage.
+    - `IF_ID_Regsiter.scala`: Pipeline register between IF and ID stage.
+    - `ImmGen.scala`: Generate the immediate from the instructions.
+    - `InstCache.scala`: Instruction cache of the processor.
+    - `Instructions.scala`: Define the instructions and their bitpat of RV32I, not the actual hardware component.
+    - `MEM_WB_Register.scala`: Pipeline register between MEM and WB stage.
+    - `PC.scala`: Program counter of the processor.
+    - `RegFile.scala`: Register file of the processor.
+    - `Tile.scala`: Top level of the processor, connects all the functional component.
 - src/test/scala/riscv_mini_five_stage_test: unit test of the processor.
-    - Tile_Test.scala generates the test result of the program written in initmem/asm_input.txt.
+    - `Tile_Test.scala` generates the test result of the program written in initmem/asm_input.txt.
 
 ### Generate verilog
 
-Running src/main/scala/riscv_mini_five_stage/Tile.scala Tile object
+Running `src/main/scala/riscv_mini_five_stage/Tile.scala` Tile object
 
 ### Input test program
+
+**This is a experimental feature**
 
 Write your assembly code in initmem/asm_input.txt.
 
@@ -64,6 +66,12 @@ No operation just type "NOP"
 ```
 
 The output file is initmem/instcache.txt, Hex format. Each line represents a Byte in instruction cache.
+
+### Write your own Chisel test branch
+
+Open `/src/test/scala/riscv_mini_five_stage_test/`, create your own test source file and begin.
+
+You may need to refer https://github.com/freechipsproject/chisel-testers to learn how to write your own Chisel test branch.
 
 [Chinese Version]: ./README_zh.md
 
