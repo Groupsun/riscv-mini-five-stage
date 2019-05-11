@@ -45,7 +45,7 @@ Running `src/main/scala/riscv_mini_five_stage/Tile.scala` Tile object
 
 ### Input test program
 
-**This is a experimental feature**
+**This is an experimental feature**
 
 Write your assembly code in initmem/asm_input.txt.
 
