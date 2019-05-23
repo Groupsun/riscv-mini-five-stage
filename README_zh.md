@@ -41,13 +41,13 @@
 
 ### 生成Verilog代码
 
-运行src/main/scala/riscv_mini_five_stage/Tile.scala中的Tile对象。
+运行`src/main/scala/riscv_mini_five_stage/Tile.scala`中的Tile对象。
 
 ### 输入测试程序
 
 **这是一个实验性的功能**
 
-将汇编代码写入到initmem/asm_input.txt中。
+将汇编代码写入到`initmem/asm_input.txt`中。
 
 格式：
 
@@ -65,7 +65,7 @@ UJ-type:   Op    rd , imm
 无操作指令只需要写“NOP”即可
 ```
 
-输出的二进制代码文件（txt格式）位于initmem/instcache.txt。仿真时会写入到指令缓存当中。
+输出的二进制代码文件（txt格式）位于`initmem/instcache.txt`。仿真时会写入到指令缓存当中。
 
 ### 编写你自己的测试代码
 
