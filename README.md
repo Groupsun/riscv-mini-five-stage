@@ -11,7 +11,7 @@ Features:
 - Resolve data hazards using forward and stall
 - Branch predict unit using global 2-bit saturating counter scheme
 
-The processor currently has no interrupt or exception scheme, this feature may be added in the future.
+The simple M-mode exception handling, please refer `Simple-M-mode-Exception-Handling` branch: https://github.com/Groupsun/riscv-mini-five-stage/tree/Simple-M-mode-Exception-Handling
 
 ## Project structure
 
