@@ -65,7 +65,7 @@ UJ-type:   Op    rd , imm
 No operation just type "NOP"
 ```
 
-The output file is initmem/instcache.txt, Hex format. Each line represents a Byte in instruction cache.
+The output file is `initmem/instcache.txt`, Hex format. Each line represents a Byte in instruction cache.
 
 ### Write your own Chisel test branch
 
