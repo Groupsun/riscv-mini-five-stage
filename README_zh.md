@@ -13,41 +13,39 @@
 - 使用旁路以及流水线停滞的方法解决数据冒险。
 - 实现分支预测器，基于全局的2位饱和计数器策略。
 
-目前该处理器还没有实现中断或者异常的处理，在未来会进行实现。
-
 ## 项目结构
 
-- src/main/scala/riscv_mini_five_stage: 处理器源代码
-    - Addr_Buffer.scala: 小型的寄存器组用于保存在分支预测失败时所要恢复的程序计数器地址。
-    - ALU.scala: 处理器的算术逻辑单元。
-    - Branch_Predict.scala: 处理器的分支预测器。
-    - Config.scala: 处理器的全局参数设置，不是实际的处理器硬件构成部分。
-    - Control.scala: 处理器的主控制逻辑。
-    - DataCache.scala: 处理器的数据缓存。
-    - Datapath.scala: 处理器的数据通路，包括所有不在逻辑部件中的逻辑门结构。
-    - Encoding.scala: 简单的RV32I指令汇编器，不是实际的处理器硬件构成部分。
-    - EX_MEM_Register.scala: EX以及MEM阶段之间的流水线阶段寄存器。
-    - Forward.scala: 处理器的旁路单元。
-    - Hazard_Detection.scala: 处理器的冒险检测单元，检测并处理需要通过停滞处理的数据冒险。
-    - ID_EX_Register.scala: ID以及EX阶段之间的流水线阶段寄存器。
-    - IF_ID_Regsiter.scala: IF以及ID阶段之间的流水线阶段寄存器。
-    - ImmGen.scala: 处理器的立即数生成单元。
-    - InstCache.scala: 处理器的指令缓存。
-    - Instructions.scala: 定义RV32I指令比特流，不是实际的处理器硬件构成部分。
-    - MEM_WB_Register.scala: MEM以及WB阶段之间的流水线阶段寄存器。
-    - PC.scala: 处理器的程序计数器。
-    - RegFile.scala: 处理器的寄存器组。
-    - Tile.scala: 处理器的顶层部件，连接所有的功能部件。
-- src/test/scala/riscv_mini_five_stage_test: 处理器功能部件的单元测试代码。
-    - Tile_Test.scala 生成仿真测试。
+- `src/main/scala/riscv_mini_five_stage`: 处理器源代码
+    - `Addr_Buffer.scala`: 小型的寄存器组用于保存在分支预测失败时所要恢复的程序计数器地址。
+    - `ALU.scala`: 处理器的算术逻辑单元。
+    - `Branch_Predict.scala`: 处理器的分支预测器。
+    - `Config.scala`: 处理器的全局参数设置，不是实际的处理器硬件构成部分。
+    - `Control.scala`: 处理器的主控制逻辑。
+    - `DataCache.scala`: 处理器的数据缓存。
+    - `Datapath.scala`: 处理器的数据通路，包括所有不在逻辑部件中的逻辑门结构。
+    - `Encoding.scala`: 简单的RV32I指令汇编器，不是实际的处理器硬件构成部分。
+    - `EX_MEM_Register.scala`: EX以及MEM阶段之间的流水线阶段寄存器。
+    - `Forward.scala`: 处理器的旁路单元。
+    - `Hazard_Detection.scala`: 处理器的冒险检测单元，检测并处理需要通过停滞处理的数据冒险。
+    - `ID_EX_Register.scala`: ID以及EX阶段之间的流水线阶段寄存器。
+    - `IF_ID_Regsiter.scala`: IF以及ID阶段之间的流水线阶段寄存器。
+    - `ImmGen.scala`: 处理器的立即数生成单元。
+    - `InstCache.scala`: 处理器的指令缓存。
+    - `Instructions.scala`: 定义RV32I指令比特流，不是实际的处理器硬件构成部分。
+    - `MEM_WB_Register.scala`: MEM以及WB阶段之间的流水线阶段寄存器。
+    - `PC.scala`: 处理器的程序计数器。
+    - `RegFile.scala`: 处理器的寄存器组。
+    - `Tile.scala`: 处理器的顶层部件，连接所有的功能部件。
+- `src/test/scala/riscv_mini_five_stage_test`: 处理器功能部件的单元测试代码。
+    - `Tile_Test.scala`: 生成仿真测试。
 
 ### 生成Verilog代码
 
-运行src/main/scala/riscv_mini_five_stage/Tile.scala中的Tile对象。
+运行`src/main/scala/riscv_mini_five_stage/Tile.scala`中的Tile对象。
 
 ### 输入测试程序
 
-将汇编代码写入到initmem/asm_input.txt中。
+将汇编代码写入到`initmem/asm_input.txt`中。
 
 格式：
 
@@ -65,11 +63,11 @@ UJ-type:   Op    rd , imm
 无操作指令只需要写“NOP”即可
 ```
 
-输出的二进制代码文件（txt格式）位于initmem/instcache.txt。仿真时会写入到指令缓存当中。
+输出的二进制代码文件（txt格式）位于`initmem/instcache.txt`。仿真时会写入到指令缓存当中。
 
 ## 简单的机器模式下的中断处理机制
 
-该中断处理机制可以在src/main/scala/riscv_mini_five_stage/CSR.scala当中找到。
+该中断处理机制可以在`src/main/scala/riscv_mini_five_stage/CSR.scala`当中找到。
 
 在我实现的分支预测机制下，中断处理似乎很棘手，因此在这个简单初版中我等待流水线稳定时才开放中断。
 
